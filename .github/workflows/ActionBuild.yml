@@ -30,6 +30,9 @@ jobs:
     - name: Build with Gradle
       run: |
           ./gradlew :app:assembleRelease
+    - name: Setup Android SDK
+      run: |
+        ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;30.0.2"
     - name: Sign releaseAPK
       uses: r0adkll/sign-android-release@v1
       with:
@@ -40,7 +43,7 @@ jobs:
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
       env:
         BUILD_TOOLS_VERSION: "30.0.2"
-    - name: Upload APK(debug)
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
           name: app
