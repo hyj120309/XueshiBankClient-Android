@@ -51,6 +51,8 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import androidx.lifecycle.viewmodel.compose.viewModel
+import app.xswallet.ui.pages.OverviewViewModel
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalSharedTransitionApi::class)
@@ -92,6 +94,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun SharedTransitionScope.WalletAppContent() {
+    val overviewViewModel: OverviewViewModel = viewModel()
     val context = LocalContext.current
     val strings = LanguageManager.strings
     val scope = rememberCoroutineScope()
@@ -280,7 +283,8 @@ fun SharedTransitionScope.WalletAppContent() {
                                 isLoggedIn = isLoggedIn,
                                 username = currentUsername,
                                 token = currentToken,
-                                strings = strings
+                                strings = strings,
+                                viewModel = overviewViewModel
                             )
                             AppPage.QUERY -> QueryPage(
                                 isLoggedIn = isLoggedIn,
@@ -309,6 +313,13 @@ fun SharedTransitionScope.WalletAppContent() {
                                 token = currentToken,
                                 initialRoute = settingsInitialRoute,
                                 strings = strings
+                            )
+                            AppPage.OVERVIEW -> OverviewPage(
+                                isLoggedIn = isLoggedIn,
+                                username = currentUsername,
+                                token = currentToken,
+                                strings = strings,
+                                viewModel = overviewViewModel
                             )
                         }
                     }

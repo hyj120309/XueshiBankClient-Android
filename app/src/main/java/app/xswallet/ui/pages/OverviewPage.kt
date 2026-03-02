@@ -1,7 +1,11 @@
 package app.xswallet.ui.pages
 
+import android.graphics.Color as AndroidColor
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -10,18 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.mikepenz.markdown.m3.Markdown
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
+import androidx.compose.ui.viewinterop.AndroidView
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 
@@ -31,68 +28,23 @@ fun SharedTransitionScope.OverviewPage(
     isLoggedIn: Boolean,
     username: String,
     token: String,
-    strings: AppStrings
+    strings: AppStrings,
+    viewModel: OverviewViewModel
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val baseUrl = "https://bankapi.bcxs.qzz.io"
+    val backgroundColor = MaterialTheme.colorScheme.background
 
-    var announcement by remember { mutableStateOf("加载中...") }
-    var isLoading by remember { mutableStateOf(true) }
-    var isRefreshing by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    suspend fun fetchAnnouncement(): String = withContext(Dispatchers.IO) {
-        val urlString = "$baseUrl/api/getpub"
-        var connection: HttpURLConnection? = null
-        try {
-            val url = URL(urlString)
-            connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 8000
-            connection.readTimeout = 8000
-            val responseCode = connection.responseCode
-            if (responseCode == 200) {
-                connection.inputStream.bufferedReader().use { it.readText() }
-            } else {
-                val error = connection.errorStream.bufferedReader().use { it.readText() }
-                throw Exception("HTTP $responseCode: $error")
-            }
-        } catch (e: Exception) {
-            throw e
-        } finally {
-            connection?.disconnect()
-        }
-    }
+    val htmlContent by viewModel.htmlContent
+    val isLoading by viewModel.isLoading
+    val errorMessage by viewModel.errorMessage
 
     LaunchedEffect(Unit) {
-        isLoading = true
-        errorMessage = null
-        try {
-            val result = fetchAnnouncement()
-            announcement = result
-        } catch (e: Exception) {
-            errorMessage = "获取公告失败：${e.message}"
-            announcement = ""
-        } finally {
-            isLoading = false
-        }
+        viewModel.loadAnnouncement(baseUrl)
     }
 
     fun refresh() {
-        scope.launch {
-            isRefreshing = true
-            errorMessage = null
-            try {
-                val result = fetchAnnouncement()
-                announcement = result
-            } catch (e: Exception) {
-                errorMessage = "获取公告失败：${e.message}"
-                announcement = ""
-            } finally {
-                isRefreshing = false
-            }
-        }
+        viewModel.refresh(baseUrl)
     }
 
     LazyColumn(
@@ -115,9 +67,9 @@ fun SharedTransitionScope.OverviewPage(
                 )
                 IconButton(
                     onClick = { refresh() },
-                    enabled = !isRefreshing && !isLoading
+                    enabled = !isLoading
                 ) {
-                    if (isRefreshing) {
+                    if (isLoading) {
                         MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
                     } else {
                         Icon(
@@ -143,28 +95,49 @@ fun SharedTransitionScope.OverviewPage(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
+                    .background(backgroundColor)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    if (isLoading) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+                htmlContent?.let { content ->
+                    val webView = remember {
+                        WebView(context).apply {
+                            setBackgroundColor(AndroidColor.TRANSPARENT)
+                            settings.javaScriptEnabled = true
+                            webViewClient = WebViewClient()
                         }
-                    } else if (errorMessage != null) {
+                    }
+                    LaunchedEffect(content) {
+                        webView.loadDataWithBaseURL(baseUrl, content, "text/html", "UTF-8", null)
+                    }
+                    AndroidView(
+                        factory = { webView },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(backgroundColor.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+                    }
+                }
+                if (errorMessage != null && htmlContent == null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(backgroundColor),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
                             text = errorMessage!!,
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium
-                        )
-                    } else {
-                        Markdown(
-                            content = announcement,
-                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

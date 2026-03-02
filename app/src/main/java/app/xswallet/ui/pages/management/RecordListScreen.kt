@@ -92,9 +92,9 @@ fun RecordListScreen(
         }
     }
 
-    suspend fun deleteRecord(recordId: Int, studentId: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun deleteRecord(recordId: Int, studentId: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/record/del?" +
-                "usrname=${URLEncoder.encode(username, "UTF-8")}&" +
+                "usrname=${URLEncoder.encode(username, "UTF-8")}&" + // 修正为 usrname
                 "stuid=${URLEncoder.encode(studentId, "UTF-8")}&" +
                 "recordid=${URLEncoder.encode(recordId.toString(), "UTF-8")}&" +
                 "token=${URLEncoder.encode(token, "UTF-8")}"
@@ -106,7 +106,8 @@ fun RecordListScreen(
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             val responseCode = connection.responseCode
-            responseCode == 200
+            val response = connection.inputStream.bufferedReader().use { it.readText() }.trim()
+            Pair(responseCode == 200, response)
         } catch (e: Exception) {
             throw e
         } finally {
@@ -295,12 +296,12 @@ fun RecordListScreen(
                     onClick = {
                         scope.launch {
                             try {
-                                val success = deleteRecord(recordToDelete!!.rowid, recordToDelete!!.studentId.toString())
+                                val (success, response) = deleteRecord(recordToDelete!!.rowid, recordToDelete!!.studentId.toString())
                                 if (success) {
                                     Toast.makeText(context, "删除成功", Toast.LENGTH_SHORT).show()
                                     loadRecords()
                                 } else {
-                                    Toast.makeText(context, "删除失败", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "删除失败：$response", Toast.LENGTH_LONG).show()
                                 }
                             } catch (e: Exception) {
                                 Toast.makeText(context, "错误：${e.message}", Toast.LENGTH_LONG).show()
