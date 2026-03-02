@@ -47,5 +47,4 @@ jobs:
       with:
           name: app
           path: |
-            app/build/outputs/apk/release/*
-            build/release/signed/*
+            app/build/outputs/apk/release/baselineProfiles/*.apk
