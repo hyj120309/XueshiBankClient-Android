@@ -7,7 +7,7 @@ on:
 
 jobs:
 
-  build-debug:
+  build:
 
     runs-on: ubuntu-latest
 
@@ -29,10 +29,22 @@ jobs:
         cache: gradle
     - name: Build with Gradle
       run: |
-          ./gradlew :app:assembleDebug
-          mv app/build/outputs/apk/debug/app-debug.apk out/app-debug.apk
+          ./gradlew :app:assembleRelease
+    - name: Sign app APK
+      uses: Tlaster/android-sign@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          output: build/release/signed
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      env:
+        BUILD_TOOLS_VERSION: "30.0.2"
     - name: Upload APK(debug)
       uses: actions/upload-artifact@v4
       with:
           name: app
-          path: out/app-debug.*
+          path: |
+            app/build/outputs/apk/release/*
+            build/release/signed/*
