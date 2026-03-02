@@ -45,7 +45,9 @@ jobs:
     - name: ls
       run: |
         ls
+        echo ------
         ls app/build/outputs/apk/release/
+        echo ------
         ls app/build/outputs/apk/release/baselineProfiles/
     - name: Upload apks
       uses: actions/upload-artifact@v4
