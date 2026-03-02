@@ -29,8 +29,8 @@ sealed class ManagementRoute(val route: String) {
     object AddStudent : ManagementRoute("add_student")
     object StudentList : ManagementRoute("student_list")
     object RecordAdd : ManagementRoute("record_add")
-    object RecordList : ManagementRoute("record_list/{studentId?}") {
-        fun withStudentId(studentId: Int) = "record_list/${studentId}"
+    object RecordList : ManagementRoute("record_list/{studentId}") {
+        fun withStudentId(studentId: Int) = "record_list/$studentId"
     }
 }
 
@@ -279,7 +279,7 @@ fun ManagementPage(
 
         composable(
             route = ManagementRoute.RecordList.route,
-            arguments = listOf(navArgument("studentId") { defaultValue = ""; type = NavType.StringType }),
+            arguments = listOf(navArgument("studentId") { type = NavType.StringType }),
             enterTransition = { slideInHorizontally(initialOffsetX = { fullWidth -> fullWidth }, animationSpec = animationSpec) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { fullWidth -> -fullWidth }, animationSpec = animationSpec) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }, animationSpec = animationSpec) },

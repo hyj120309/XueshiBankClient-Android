@@ -1,8 +1,6 @@
 package app.xswallet.ui.pages.settings.screens
 
 import android.os.Build
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -13,7 +11,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +28,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -59,7 +55,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.Android16Switch
 import app.xswallet.ui.pages.settings.components.ColorPickerDialog
@@ -77,10 +72,6 @@ fun AppSettingsScreen(
     var isDarkMode by remember { mutableStateOf(ThemeManager.isDarkMode) }
     var useDynamicColor by remember { mutableStateOf(ThemeManager.useDynamicColor) }
     var accentColorHex by remember { mutableStateOf("") }
-    var isWebViewVisible by remember { mutableStateOf(false) }
-    var secretCodeTimer by remember { mutableStateOf(0) }
-    var isSecretCodeActive by remember { mutableStateOf(false) }
-    var secretCodeInputStartTime by remember { mutableStateOf<Long?>(null) }
     var showColorPicker by remember { mutableStateOf(false) }
     var isValidHexColor by remember { mutableStateOf(false) }
 
@@ -101,34 +92,6 @@ fun AppSettingsScreen(
             accentColorHex.matches(Regex("^#[0-9A-Fa-f]{6}$"))
         } catch (e: Exception) {
             false
-        }
-    }
-
-    LaunchedEffect(accentColorHex) {
-        if (accentColorHex.isEmpty()) {
-            secretCodeInputStartTime = null
-            isSecretCodeActive = false
-            secretCodeTimer = 0
-            return@LaunchedEffect
-        }
-        if (!isSecretCodeActive && secretCodeInputStartTime == null) {
-            secretCodeInputStartTime = System.currentTimeMillis()
-            isSecretCodeActive = true
-            val startTime = System.currentTimeMillis()
-            secretCodeTimer = 20
-            while (System.currentTimeMillis() - startTime < 20000) {
-                val remainingTime = 20 - ((System.currentTimeMillis() - startTime) / 1000).toInt()
-                secretCodeTimer = remainingTime.coerceAtLeast(0)
-                delay(1000)
-                if (accentColorHex == "NFJG114514BBBY" && isSecretCodeActive) {
-                    isWebViewVisible = true
-                    isSecretCodeActive = false
-                    secretCodeInputStartTime = null
-                    break
-                }
-            }
-            isSecretCodeActive = false
-            secretCodeInputStartTime = null
         }
     }
 
@@ -536,58 +499,5 @@ fun AppSettingsScreen(
             },
             strings = strings
         )
-    }
-
-    if (isWebViewVisible) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f))
-                .clickable { isWebViewVisible = false }
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = strings.secretPage,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(
-                            onClick = { isWebViewVisible = false }
-                        ) {
-                            Icon(
-                                Icons.Filled.Close,
-                                contentDescription = strings.close
-                            )
-                        }
-                    }
-                    AndroidView(
-                        factory = { context ->
-                            WebView(context).apply {
-                                webViewClient = WebViewClient()
-                                loadUrl("https://www.google.com")
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
     }
 }

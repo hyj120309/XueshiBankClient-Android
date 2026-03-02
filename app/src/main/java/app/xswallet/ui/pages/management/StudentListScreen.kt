@@ -75,7 +75,10 @@ fun StudentListScreen(
                                     null
                                 }
                             }
-                            is String -> permissionsField
+                            is String -> {
+                                val pattern = "\\d+".toRegex()
+                                pattern.find(permissionsField)?.value
+                            }
                             else -> null
                         }
                     }
@@ -132,7 +135,7 @@ fun StudentListScreen(
         scope.launch {
             try {
                 val classId = fetchUserPermissions()
-                if (classId.isNullOrEmpty()) {
+                if (classId.isNullOrBlank()) {
                     errorMessage = "当前用户没有权限组，无法加载学生"
                     students = emptyList()
                 } else {
