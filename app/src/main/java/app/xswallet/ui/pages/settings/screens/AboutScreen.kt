@@ -77,32 +77,21 @@ fun AboutScreen(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    if (appIconPainter != null) {
-                        Image(
-                            painter = appIconPainter!!,
-                            contentDescription = "应用图标",
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                        )
-                    }
-                    Text(
-                        text = "去你的Google，把我的图标裁成啥了",
-                        fontSize = 8.sp,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(start = 4.dp)
+                if (appIconPainter != null) {
+                    Image(
+                        painter = appIconPainter!!,
+                        contentDescription = "应用图标",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -147,7 +136,7 @@ fun AboutScreen(
                 )
 
                 Text(
-                    text = "后端",
+                    text = "服务端",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -173,7 +162,7 @@ fun AboutScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "前端",
+                    text = "客户端",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -206,6 +195,25 @@ fun AboutScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp)
         )
+
+        Text(
+            text = "Q: 如果我发现了软件的一个问题，我该如何反馈？\nA: 发现问题当然欢迎反馈，只需要完整的写下你当时干了什么导致了这个问题，并提交到师太手中即可，还可以领取学士币（多少就不知道了QwQ）",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Text(
+            text = "Q: 如果我有编程能力，可以加入开发吗？\nA: 当然可以，毕竟我们整个开发组就俩人，实在是要多几个帮手，你可以选择加入前端app开发，也可以加入后端开发，同样的，把《入职申请》（是叫这个吧？）交给师太即可",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Text(
+            text = "暂时只有这些，如果大家有问题需要这里统一解答的，告诉师太即可（三遍了）",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
