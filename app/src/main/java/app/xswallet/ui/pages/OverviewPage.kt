@@ -1,5 +1,6 @@
 package app.xswallet.ui.pages
 
+import android.annotation.SuppressLint
 import android.graphics.Color as AndroidColor
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -22,6 +23,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 
+@SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SharedTransitionScope.OverviewPage(
