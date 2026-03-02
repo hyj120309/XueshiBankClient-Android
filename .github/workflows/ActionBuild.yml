@@ -42,6 +42,11 @@ jobs:
         keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
       env:
         BUILD_TOOLS_VERSION: "30.0.2"
+    - name: ls
+      run: |
+        ls
+        ls app/build/outputs/apk/release/
+        ls app/build/outputs/apk/release/baselineProfiles/
     - name: Upload apks
       uses: actions/upload-artifact@v4
       with:
