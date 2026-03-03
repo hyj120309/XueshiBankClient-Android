@@ -61,23 +61,23 @@ fun AccountSecurityScreen(
         }
     }
 
-    suspend fun verifyOldPassword(oldPass: String): Boolean = withContext(Dispatchers.IO) {
-        val urlString = "$baseUrl/api/login?usrname=${URLEncoder.encode(username, "UTF-8")}&passwd=${URLEncoder.encode(oldPass, "UTF-8")}"
-        var connection: HttpURLConnection? = null
-        try {
-            val url = URL(urlString)
-            connection = url.openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 8000
-            connection.readTimeout = 8000
-            val responseCode = connection.responseCode
-            responseCode == 200
-        } catch (e: Exception) {
-            false
-        } finally {
-            connection?.disconnect()
-        }
-    }
+    // suspend fun verifyOldPassword(oldPass: String): Boolean = withContext(Dispatchers.IO) {
+    //     val urlString = "$baseUrl/api/login?usrname=${URLEncoder.encode(username, "UTF-8")}&passwd=${URLEncoder.encode(oldPass, "UTF-8")}"
+    //     var connection: HttpURLConnection? = null
+    //     try {
+    //         val url = URL(urlString)
+    //         connection = url.openConnection() as HttpURLConnection
+    //         connection.requestMethod = "GET"
+    //         connection.connectTimeout = 8000
+    //         connection.readTimeout = 8000
+    //         val responseCode = connection.responseCode
+    //         responseCode == 200
+    //     } catch (e: Exception) {
+    //         false
+    //     } finally {
+    //         connection?.disconnect()
+    //     }
+    // }
 
     suspend fun changePassword(newPass: String): Result<Int> = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/user/setpw?usrname=${URLEncoder.encode(username, "UTF-8")}&token=${URLEncoder.encode(token, "UTF-8")}&passwd=${URLEncoder.encode(newPass, "UTF-8")}"
@@ -194,15 +194,15 @@ fun AccountSecurityScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
-                        OutlinedTextField(
-                            value = oldPassword,
-                            onValueChange = { oldPassword = it },
-                            label = { Text("原密码") },
-                            modifier = Modifier.fillMaxWidth(),
-                            visualTransformation = PasswordVisualTransformation(),
-                            enabled = !isChangingPassword && isServerAvailable
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        // OutlinedTextField(
+                        //     value = oldPassword,
+                        //     onValueChange = { oldPassword = it },
+                        //     label = { Text("原密码") },
+                        //     modifier = Modifier.fillMaxWidth(),
+                        //     visualTransformation = PasswordVisualTransformation(),
+                        //     enabled = !isChangingPassword && isServerAvailable
+                        // )
+                        // Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
                             value = newPassword,
@@ -266,12 +266,12 @@ fun AccountSecurityScreen(
                                 isChangingPassword = true
                                 scope.launch {
                                     try {
-                                        val oldValid = verifyOldPassword(oldPassword)
-                                        if (!oldValid) {
-                                            Toast.makeText(context, "原密码错误", Toast.LENGTH_SHORT).show()
-                                            isChangingPassword = false
-                                            return@launch
-                                        }
+                                        // val oldValid = verifyOldPassword(oldPassword)
+                                        // if (!oldValid) {
+                                        //     Toast.makeText(context, "原密码错误", Toast.LENGTH_SHORT).show()
+                                        //     isChangingPassword = false
+                                        //     return@launch
+                                        // }
                                         val result = changePassword(newPassword)
                                         if (result.isSuccess) {
                                             Toast.makeText(context, "密码修改成功", Toast.LENGTH_SHORT).show()
