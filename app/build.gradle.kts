@@ -12,7 +12,7 @@ android {
     namespace = "app.xswallet"
     
     compileSdk {
-        version = 36 
+        version = release(36)
     }
 
     defaultConfig {
