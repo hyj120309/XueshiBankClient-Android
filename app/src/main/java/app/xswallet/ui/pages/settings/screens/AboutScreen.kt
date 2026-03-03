@@ -148,7 +148,7 @@ fun AboutScreen(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.about_jg),
-                        contentDescription = "杰哥",
+                        contentDescription = "hyj120309",
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape),
