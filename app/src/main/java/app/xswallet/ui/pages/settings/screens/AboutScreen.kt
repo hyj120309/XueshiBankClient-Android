@@ -104,7 +104,7 @@ fun AboutScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "构建日期 ${BuildConfig.BUILD_TIME}",
+                    text = "构建日期(UTC) ${BuildConfig.BUILD_TIME}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
