@@ -325,9 +325,9 @@ object ZhCnStrings : AppStrings {
     override val accentColorDesc = "关闭动态取色后，可在此输入HEX颜色值（如#FF5722）"
     override val colorPreview = "颜色预览"
     override val displaySettings = "显示设置"
-    override val dpiScale = "显示密度 (DPI缩放)"
-    override val dpiScaleDesc = "调整应用界面显示密度，范围：0.5 - 2.0 (默认: 1.0)"
-    override val dpiExample = "例如: 1.0"
+    override val dpiScale = "显示密度 (缩放大小)"
+    override val dpiScaleDesc = "调整应用界面缩放大小，如果太大了点击不到按钮可以调小一些，范围：0.5 - 2.0 (默认: 1.0)"
+    override val dpiExample = "默认是1.0，建议一次调整的跨度要小一些，以免太小了啥都点不到"
     override val apply = "应用"
     override val currentDpi = "当前DPI:"
     override val dpiWarning = "请输入有效的DPI缩放值 (0.5 - 2.0)"
@@ -359,25 +359,30 @@ object ZhCnStrings : AppStrings {
 }
 
 object ZhTwStrings : AppStrings by ZhCnStrings {
+    override val query = "查詢"
     override val appName = "XSWallet"
+    override val back = "返回"
+    override val close = "關閉"
+    override val confirm = "確定"
+    override val cancel = "取消"
+    override val search = "搜尋"
+    override val settings = "設定"
+    override val toolbox = "工具箱"
+    override val management = "管理"
     override val overview = "概覽"
     override val wallet = "錢包"
     override val transactions = "交易"
     override val history = "歷史"
-    override val settings = "設定"
-    override val toolbox = "工具箱"
-    override val search = "搜尋"
     override val exitMessage = "再按一次退出應用"
     override val languageNote = "僅供娛樂，AI翻譯，可能有錯誤"
     override val toolboxDesc1 = "這些功能你可能一輩子都用不到，但要用的時候還是有用的"
     override val comingSoon = "沒了"
     override val moreToolsSoon = "是的，沒有了"
     override val underDevelopment = "功能開發中"
-    override val management = "管理"
 }
 
 object EnStrings : AppStrings {
-    override val query = "查询"
+    override val query = "Query"
     override val appName = "XSWallet"
     override val back = "Back"
     override val close = "Close"
@@ -479,7 +484,7 @@ object EnStrings : AppStrings {
     override val exchange = "Exchange"
 
     override val settingsTitle = "Settings"
-    override val accountSecurity = "Account Settings"
+    override val accountSecurity = "Account Security"
     override val accountSecurityDesc = "Manage your account and security settings"
     override val appSettings = "App Settings"
     override val appSettingsDesc = "Change the appearance of the app, etc."
@@ -525,8 +530,8 @@ object EnStrings : AppStrings {
     override val secretPage = "Secret Page"
 
     override val toolboxTitle = "Toolbox"
-    override val toolboxDesc1 = "You might never need these features, but they're useful when you do"
-    override val comingSoon = "Gone"
+    override val toolboxDesc1 = "Features you might never use, but useful when needed"
+    override val comingSoon = "No more"
     override val underDevelopment = "Under Development"
     override val moreToolsSoon = "Yes, it's gone"
     override val toolboxPlan = "Toolbox Plan"
@@ -545,10 +550,11 @@ object EnStrings : AppStrings {
 
     override val exitMessage = "Press back again to exit"
 
-    override val languageNote = "For entertainment only, AI translation, may contain errors"
+    override val languageNote = "For fun only, AI translation, may contain errors"
 }
 
 object LzhStrings : AppStrings by ZhCnStrings {
+    override val query = "查詢"
     override val appName = "XSWallet"
     override val overview = "總覽"
     override val wallet = "錢囊"
@@ -557,13 +563,16 @@ object LzhStrings : AppStrings by ZhCnStrings {
     override val settings = "設定"
     override val toolbox = "百寶箱"
     override val search = "尋覓"
+    override val management = "管理"
+    override val back = "歸去"
+    override val confirm = "然也"
+    override val cancel = "否也"
     override val exitMessage = "再按一次退出應用"
     override val languageNote = "僅供娛樂，AI翻譯，或有謬誤"
     override val toolboxDesc1 = "此等功能，君或終生不用，然需時則有用"
     override val comingSoon = "無矣"
     override val moreToolsSoon = "然，無矣"
     override val underDevelopment = "功能開發中"
-    override val management = "管理"
 }
 
 @Stable
