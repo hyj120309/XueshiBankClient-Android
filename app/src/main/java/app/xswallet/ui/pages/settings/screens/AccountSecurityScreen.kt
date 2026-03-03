@@ -94,6 +94,7 @@ fun AccountSecurityScreen(
                 Result.success(responseCode)
             } else {
                 Result.failure(Exception("HTTP_$responseCode"))
+            }
         } catch (e: Exception) {
             throw e
         } finally {
