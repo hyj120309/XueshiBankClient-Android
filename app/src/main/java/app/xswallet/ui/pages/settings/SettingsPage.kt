@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -41,7 +40,8 @@ fun SharedTransitionScope.SettingsPage(
     username: String,
     token: String,
     initialRoute: String = SettingsRoute.Main.route,
-    strings: AppStrings
+    strings: AppStrings,
+    isServerAvailable: Boolean
 ) {
     val navController = rememberNavController()
 
@@ -55,15 +55,8 @@ fun SharedTransitionScope.SettingsPage(
         if (initialRoute != SettingsRoute.Main.route) {
             navController.popBackStack(SettingsRoute.Main.route, inclusive = false)
             navController.navigate(initialRoute)
-        } else {
-            navController.popBackStack(SettingsRoute.Main.route, inclusive = false)
         }
     }
-
-    val animationSpec = tween<IntOffset>(
-        durationMillis = AnimationDuration,
-        easing = AnimationEasing
-    )
 
     NavHost(
         navController = navController,
@@ -75,25 +68,25 @@ fun SharedTransitionScope.SettingsPage(
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             exitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popEnterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popExitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             }
         ) {
@@ -101,7 +94,8 @@ fun SharedTransitionScope.SettingsPage(
                 onNavigate = { route -> navController.navigate(route) },
                 strings = strings,
                 isLoggedIn = isLoggedIn,
-                onShowLogin = onShowLogin
+                onShowLogin = onShowLogin,
+                isServerAvailable = isServerAvailable
             )
         }
 
@@ -110,25 +104,25 @@ fun SharedTransitionScope.SettingsPage(
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             exitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popEnterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popExitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             }
         ) {
@@ -143,7 +137,8 @@ fun SharedTransitionScope.SettingsPage(
                 onShowLogin = onShowLogin,
                 username = username,
                 token = token,
-                strings = strings
+                strings = strings,
+                isServerAvailable = isServerAvailable
             )
         }
 
@@ -152,25 +147,25 @@ fun SharedTransitionScope.SettingsPage(
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             exitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popEnterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popExitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             }
         ) {
@@ -189,25 +184,25 @@ fun SharedTransitionScope.SettingsPage(
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             exitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popEnterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popExitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             }
         ) {
@@ -226,25 +221,25 @@ fun SharedTransitionScope.SettingsPage(
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             exitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popEnterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { fullWidth -> -fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             },
             popExitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = animationSpec
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
                 )
             }
         ) {

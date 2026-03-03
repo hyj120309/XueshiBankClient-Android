@@ -3,6 +3,7 @@ package app.xswallet.ui.pages.management
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,8 +17,6 @@ import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -26,7 +25,8 @@ import java.net.URLEncoder
 fun AddUserScreen(
     onBack: () -> Unit,
     token: String,
-    strings: AppStrings
+    strings: AppStrings,
+    isServerAvailable: Boolean
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -76,7 +76,7 @@ fun AddUserScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = strings.back)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
             }
             Text(
                 text = "添加用户",
@@ -93,7 +93,7 @@ fun AddUserScreen(
             onValueChange = { username = it },
             label = { Text("用户名") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading && isServerAvailable
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -102,7 +102,7 @@ fun AddUserScreen(
             onValueChange = { password = it },
             label = { Text("密码") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading && isServerAvailable
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -111,7 +111,7 @@ fun AddUserScreen(
             onValueChange = { alias = it },
             label = { Text("别名") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading && isServerAvailable
         )
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -120,7 +120,7 @@ fun AddUserScreen(
             onValueChange = { permissions = it },
             label = { Text("权限组 (JSON数组)") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading && isServerAvailable
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -151,7 +151,7 @@ fun AddUserScreen(
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading && isServerAvailable
         ) {
             if (isLoading) {
                 MaterialExpressiveLoading(modifier = Modifier.size(24.dp))

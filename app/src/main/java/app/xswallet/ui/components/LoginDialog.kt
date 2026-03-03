@@ -26,8 +26,6 @@ import kotlinx.coroutines.launch
 import app.xswallet.data.SecurePrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -176,10 +174,7 @@ fun LoginDialog(
                             enabled = !isLoading
                         ) {
                             if (isLoading) {
-                                MaterialExpressiveLoading(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
+                                MaterialExpressiveLoading(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                             } else {
                                 Text("登录")
                             }

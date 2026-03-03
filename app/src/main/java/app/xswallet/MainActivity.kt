@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.xswallet.data.SecurePrefs
 import app.xswallet.ui.LanguageManager
 import app.xswallet.ui.components.LoginDialog
@@ -42,17 +44,11 @@ import app.xswallet.ui.pages.settings.SettingsPage
 import app.xswallet.ui.pages.settings.navigation.SettingsRoute
 import app.xswallet.ui.theme.ThemeManager
 import app.xswallet.ui.theme.XSWalletTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
-import androidx.lifecycle.viewmodel.compose.viewModel
-import app.xswallet.ui.pages.OverviewViewModel
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalSharedTransitionApi::class)
@@ -94,12 +90,12 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun SharedTransitionScope.WalletAppContent() {
-    val overviewViewModel: OverviewViewModel = viewModel()
     val context = LocalContext.current
     val strings = LanguageManager.strings
     val scope = rememberCoroutineScope()
     val baseUrl = "https://bankapi.bcxs.qzz.io"
 
+    var isServerAvailable by remember { mutableStateOf<Boolean?>(null) }
     var isLoggedIn by remember { mutableStateOf(false) }
     var currentUsername by remember { mutableStateOf("") }
     var currentToken by remember { mutableStateOf("") }
@@ -129,6 +125,24 @@ fun SharedTransitionScope.WalletAppContent() {
         label = "overlayAlpha"
     )
 
+    suspend fun checkServerStatus(): Boolean = withContext(Dispatchers.IO) {
+        val urlString = "$baseUrl/status"
+        var connection: HttpURLConnection? = null
+        try {
+            val url = URL(urlString)
+            connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+            val responseCode = connection.responseCode
+            responseCode == 200
+        } catch (e: Exception) {
+            false
+        } finally {
+            connection?.disconnect()
+        }
+    }
+
     suspend fun performAutoLogin(savedUsername: String, savedPassword: String): String? = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/login?usrname=${URLEncoder.encode(savedUsername, "UTF-8")}&passwd=${URLEncoder.encode(savedPassword, "UTF-8")}"
         var connection: HttpURLConnection? = null
@@ -152,13 +166,17 @@ fun SharedTransitionScope.WalletAppContent() {
     }
 
     LaunchedEffect(Unit) {
-        val (savedUsername, savedPassword) = SecurePrefs.getUser(context)
-        if (savedUsername != null && savedPassword != null) {
-            val token = performAutoLogin(savedUsername, savedPassword)
-            if (token != null) {
-                isLoggedIn = true
-                currentUsername = savedUsername
-                currentToken = token
+        val serverOk = checkServerStatus()
+        isServerAvailable = serverOk
+        if (serverOk) {
+            val (savedUsername, savedPassword) = SecurePrefs.getUser(context)
+            if (savedUsername != null && savedPassword != null) {
+                val token = performAutoLogin(savedUsername, savedPassword)
+                if (token != null) {
+                    isLoggedIn = true
+                    currentUsername = savedUsername
+                    currentToken = token
+                }
             }
         }
         isAutoLoggingIn = false
@@ -183,7 +201,7 @@ fun SharedTransitionScope.WalletAppContent() {
         }
     }
 
-    if (isAutoLoggingIn) {
+    if (isAutoLoggingIn || isServerAvailable == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -284,19 +302,22 @@ fun SharedTransitionScope.WalletAppContent() {
                                 username = currentUsername,
                                 token = currentToken,
                                 strings = strings,
-                                viewModel = overviewViewModel
+                                isServerAvailable = isServerAvailable == true,
+                                viewModel = viewModel()
                             )
                             AppPage.QUERY -> QueryPage(
                                 isLoggedIn = isLoggedIn,
                                 username = currentUsername,
                                 token = currentToken,
-                                strings = strings
+                                strings = strings,
+                                isServerAvailable = isServerAvailable == true
                             )
                             AppPage.MANAGEMENT -> ManagementPage(
                                 isLoggedIn = isLoggedIn,
                                 username = currentUsername,
                                 token = currentToken,
-                                strings = strings
+                                strings = strings,
+                                isServerAvailable = isServerAvailable == true
                             )
                             AppPage.SETTINGS -> SettingsPage(
                                 onBack = { selectedPage = AppPage.OVERVIEW },
@@ -312,14 +333,8 @@ fun SharedTransitionScope.WalletAppContent() {
                                 username = currentUsername,
                                 token = currentToken,
                                 initialRoute = settingsInitialRoute,
-                                strings = strings
-                            )
-                            AppPage.OVERVIEW -> OverviewPage(
-                                isLoggedIn = isLoggedIn,
-                                username = currentUsername,
-                                token = currentToken,
                                 strings = strings,
-                                viewModel = overviewViewModel
+                                isServerAvailable = isServerAvailable == true
                             )
                         }
                     }
@@ -375,14 +390,14 @@ fun SharedTransitionScope.WalletAppContent() {
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            Divider(
+                            HorizontalDivider(
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            navigationItems().forEachIndexed { index, item ->
+                            navigationItems(strings).forEachIndexed { index, item ->
                                 val page = when (index) {
                                     0 -> AppPage.OVERVIEW
                                     1 -> AppPage.QUERY
@@ -391,7 +406,13 @@ fun SharedTransitionScope.WalletAppContent() {
                                     else -> AppPage.OVERVIEW
                                 }
 
-                                val enabled = if (page == AppPage.MANAGEMENT) isLoggedIn else true
+                                val enabled = if (page == AppPage.MANAGEMENT) {
+                                    isLoggedIn && (isServerAvailable == true)
+                                } else if (page == AppPage.QUERY) {
+                                    isServerAvailable == true
+                                } else {
+                                    true
+                                }
 
                                 Box(
                                     modifier = Modifier
@@ -461,15 +482,22 @@ fun SharedTransitionScope.WalletAppContent() {
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
                                     .padding(16.dp)
-                                    .clickable {
-                                        if (isLoggedIn) {
-                                            selectedPage = AppPage.SETTINGS
-                                            settingsInitialRoute = SettingsRoute.AccountSecurity.route
-                                            isMenuExpanded = false
-                                        } else {
-                                            showLoginDialog = true
+                                    .clickable(
+                                        enabled = isServerAvailable == true,
+                                        onClick = {
+                                            if (isLoggedIn) {
+                                                selectedPage = AppPage.SETTINGS
+                                                settingsInitialRoute = SettingsRoute.AccountSecurity.route
+                                                isMenuExpanded = false
+                                            } else {
+                                                if (isServerAvailable == true) {
+                                                    showLoginDialog = true
+                                                } else {
+                                                    Toast.makeText(context, "服务器不可用", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
                                         }
-                                    }
+                                    )
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -479,7 +507,7 @@ fun SharedTransitionScope.WalletAppContent() {
                                         Icons.Filled.Person,
                                         contentDescription = strings.account,
                                         modifier = Modifier.size(36.dp),
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = if (isServerAvailable == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                     )
                                     Column(
                                         modifier = Modifier.weight(1f)
@@ -489,12 +517,13 @@ fun SharedTransitionScope.WalletAppContent() {
                                             style = MaterialTheme.typography.bodyLarge,
                                             fontWeight = FontWeight.SemiBold,
                                             maxLines = 1,
-                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                            color = if (isServerAvailable == true) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                         )
                                         Text(
                                             text = if (isLoggedIn) strings.loggedIn else "点击登录",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.outline,
+                                            color = if (isServerAvailable == true) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.outline.copy(alpha = 0.38f),
                                             maxLines = 1
                                         )
                                     }

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.xswallet.ui.AppStrings
 
 data class NavigationItem(
     val title: String,
@@ -15,7 +16,7 @@ data class NavigationItem(
 )
 
 @Composable
-fun navigationItems(): List<NavigationItem> {
+fun navigationItems(strings: AppStrings): List<NavigationItem> {
     return listOf(
         NavigationItem("主页", Icons.Filled.Home),
         NavigationItem("查询", Icons.Filled.Search),

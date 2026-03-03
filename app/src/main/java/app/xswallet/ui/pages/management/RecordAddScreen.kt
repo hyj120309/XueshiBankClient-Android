@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,8 +19,6 @@ import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -29,7 +28,8 @@ fun RecordAddScreen(
     onBack: () -> Unit,
     username: String,
     token: String,
-    strings: AppStrings
+    strings: AppStrings,
+    isServerAvailable: Boolean
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -78,7 +78,7 @@ fun RecordAddScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = strings.back)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
             }
             Text(
                 text = "添加记录",
@@ -95,7 +95,7 @@ fun RecordAddScreen(
             onValueChange = { studentId = it },
             label = { Text("学号") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
+            enabled = !isLoading && isServerAvailable,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -105,7 +105,7 @@ fun RecordAddScreen(
             onValueChange = { amount = it },
             label = { Text("金额") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
+            enabled = !isLoading && isServerAvailable,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -115,7 +115,7 @@ fun RecordAddScreen(
             onValueChange = { reason = it },
             label = { Text("原因") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading && isServerAvailable
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -145,7 +145,7 @@ fun RecordAddScreen(
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
+            enabled = !isLoading && isServerAvailable
         ) {
             if (isLoading) {
                 MaterialExpressiveLoading(modifier = Modifier.size(24.dp))

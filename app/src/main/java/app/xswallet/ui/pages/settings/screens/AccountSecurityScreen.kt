@@ -2,8 +2,9 @@ package app.xswallet.ui.pages.settings.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
@@ -12,19 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import app.xswallet.data.SecurePrefs
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -37,16 +34,17 @@ fun AccountSecurityScreen(
     onShowLogin: () -> Unit,
     username: String,
     token: String,
-    strings: AppStrings
+    strings: AppStrings,
+    isServerAvailable: Boolean,
+    viewModel: AccountSecurityViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val baseUrl = "https://bankapi.bcxs.qzz.io"
 
-    var userInfo by remember { mutableStateOf<Map<String, String>?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var loadedUsername by remember { mutableStateOf("") }
+    val userInfo by viewModel.userInfo.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     var oldPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -55,8 +53,16 @@ fun AccountSecurityScreen(
     var passwordError by remember { mutableStateOf<String?>(null) }
     var passwordStrength by remember { mutableStateOf<String?>(null) }
 
-    suspend fun fetchUserInfo(): Map<String, String>? = withContext(Dispatchers.IO) {
-        val urlString = "$baseUrl/api/user/me?usrname=${URLEncoder.encode(username, "UTF-8")}&token=${URLEncoder.encode(token, "UTF-8")}"
+    LaunchedEffect(isLoggedIn, username, token, isServerAvailable) {
+        if (isLoggedIn && isServerAvailable) {
+            viewModel.loadUserInfoWithDelay(username, token, baseUrl, 350)
+        } else {
+            viewModel.clear()
+        }
+    }
+
+    suspend fun verifyOldPassword(oldPass: String): Boolean = withContext(Dispatchers.IO) {
+        val urlString = "$baseUrl/api/login?usrname=${URLEncoder.encode(username, "UTF-8")}&passwd=${URLEncoder.encode(oldPass, "UTF-8")}"
         var connection: HttpURLConnection? = null
         try {
             val url = URL(urlString)
@@ -65,35 +71,9 @@ fun AccountSecurityScreen(
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             val responseCode = connection.responseCode
-            val response = connection.inputStream.bufferedReader().use { it.readText() }.trim()
-            when (responseCode) {
-                200 -> {
-                    if (response == "SuperAdmin") {
-                        mapOf("username" to "admin", "alias" to "超级管理员", "permissions" to "")
-                    } else {
-                        val json = JSONObject(response)
-                        val username = json.getString("username")
-                        val alias = json.getString("alias")
-                        val permissionsField = json.get("permissions")
-                        val permissionsStr = when (permissionsField) {
-                            is JSONArray -> {
-                                (0 until permissionsField.length()).joinToString(", ") { permissionsField.getString(it) }
-                            }
-                            is String -> {
-                                permissionsField
-                            }
-                            else -> ""
-                        }
-                        mapOf("username" to username, "alias" to alias, "permissions" to permissionsStr)
-                    }
-                }
-                else -> {
-                    val error = connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "未知错误"
-                    throw Exception("HTTP $responseCode: $error")
-                }
-            }
+            responseCode == 200
         } catch (e: Exception) {
-            throw e
+            false
         } finally {
             connection?.disconnect()
         }
@@ -109,7 +89,6 @@ fun AccountSecurityScreen(
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             val responseCode = connection.responseCode
-            val response = connection.inputStream.bufferedReader().use { it.readText() }.trim()
             responseCode == 200
         } catch (e: Exception) {
             throw e
@@ -128,23 +107,6 @@ fun AccountSecurityScreen(
         }
     }
 
-    LaunchedEffect(isLoggedIn, username, token) {
-        if (isLoggedIn && (loadedUsername != username || userInfo == null)) {
-            isLoading = true
-            errorMessage = null
-            try {
-                val info = fetchUserInfo()
-                userInfo = info
-                loadedUsername = username
-            } catch (e: Exception) {
-                errorMessage = e.message
-                Toast.makeText(context, "获取用户信息失败: ${e.message}", Toast.LENGTH_LONG).show()
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -160,7 +122,7 @@ fun AccountSecurityScreen(
                 modifier = Modifier.size(48.dp)
             ) {
                 Icon(
-                    Icons.Filled.ArrowBack,
+                    Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = strings.back
                 )
             }
@@ -233,7 +195,7 @@ fun AccountSecurityScreen(
                             label = { Text("原密码") },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = PasswordVisualTransformation(),
-                            enabled = !isChangingPassword
+                            enabled = !isChangingPassword && isServerAvailable
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -246,7 +208,7 @@ fun AccountSecurityScreen(
                             label = { Text("新密码") },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = PasswordVisualTransformation(),
-                            enabled = !isChangingPassword,
+                            enabled = !isChangingPassword && isServerAvailable,
                             isError = passwordError != null && newPassword.isNotBlank()
                         )
                         if (passwordStrength != null && newPassword.isNotBlank()) {
@@ -270,7 +232,7 @@ fun AccountSecurityScreen(
                             label = { Text("确认新密码") },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = PasswordVisualTransformation(),
-                            enabled = !isChangingPassword,
+                            enabled = !isChangingPassword && isServerAvailable,
                             isError = passwordError != null
                         )
 
@@ -299,6 +261,12 @@ fun AccountSecurityScreen(
                                 isChangingPassword = true
                                 scope.launch {
                                     try {
+                                        val oldValid = verifyOldPassword(oldPassword)
+                                        if (!oldValid) {
+                                            Toast.makeText(context, "原密码错误", Toast.LENGTH_SHORT).show()
+                                            isChangingPassword = false
+                                            return@launch
+                                        }
                                         val success = changePassword(newPassword)
                                         if (success) {
                                             Toast.makeText(context, "密码修改成功", Toast.LENGTH_SHORT).show()
@@ -317,7 +285,7 @@ fun AccountSecurityScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !isChangingPassword && isLoggedIn && username != "admin"
+                            enabled = !isChangingPassword && isLoggedIn && username != "admin" && isServerAvailable
                         ) {
                             if (isChangingPassword) {
                                 MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
@@ -349,7 +317,7 @@ fun AccountSecurityScreen(
                     )
                 ) {
                     Icon(
-                        Icons.Filled.ExitToApp,
+                        Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
@@ -366,7 +334,8 @@ fun AccountSecurityScreen(
         } else {
             Button(
                 onClick = onShowLogin,
-                modifier = Modifier.fillMaxWidth(0.8f)
+                modifier = Modifier.fillMaxWidth(0.8f),
+                enabled = isServerAvailable
             ) {
                 Text("去登录")
             }

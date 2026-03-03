@@ -23,7 +23,8 @@ fun MainSettingsScreen(
     onNavigate: (String) -> Unit,
     strings: AppStrings,
     isLoggedIn: Boolean,
-    onShowLogin: () -> Unit
+    onShowLogin: () -> Unit,
+    isServerAvailable: Boolean
 ) {
     LazyColumn(
         modifier = Modifier
@@ -55,7 +56,7 @@ fun MainSettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(enabled = isServerAvailable) {
                             if (isLoggedIn) {
                                 onNavigate(SettingsRoute.AccountSecurity.route)
                             } else {
@@ -69,7 +70,7 @@ fun MainSettingsScreen(
                         Icons.Filled.Lock,
                         contentDescription = strings.accountSecurity,
                         modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = if (isServerAvailable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(
@@ -78,19 +79,20 @@ fun MainSettingsScreen(
                         Text(
                             text = strings.accountSecurity,
                             style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = if (isServerAvailable) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                         )
                         Text(
                             text = strings.accountSecurityDesc,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = if (isServerAvailable) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.outline.copy(alpha = 0.38f)
                         )
                     }
                     Icon(
                         Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = strings.back,
                         modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.outline
+                        tint = if (isServerAvailable) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.outline.copy(alpha = 0.38f)
                     )
                 }
             }

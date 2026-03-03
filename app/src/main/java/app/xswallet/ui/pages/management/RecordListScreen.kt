@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -22,9 +23,6 @@ import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -43,7 +41,8 @@ fun RecordListScreen(
     username: String,
     token: String,
     strings: AppStrings,
-    initialStudentId: String = ""
+    initialStudentId: String = "",
+    isServerAvailable: Boolean
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -94,7 +93,7 @@ fun RecordListScreen(
 
     suspend fun deleteRecord(recordId: Int, studentId: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/record/del?" +
-                "usrname=${URLEncoder.encode(username, "UTF-8")}&" + // 修正为 usrname
+                "usrname=${URLEncoder.encode(username, "UTF-8")}&" +
                 "stuid=${URLEncoder.encode(studentId, "UTF-8")}&" +
                 "recordid=${URLEncoder.encode(recordId.toString(), "UTF-8")}&" +
                 "token=${URLEncoder.encode(token, "UTF-8")}"
@@ -116,6 +115,11 @@ fun RecordListScreen(
     }
 
     fun loadRecords() {
+        if (!isServerAvailable) {
+            errorMessage = "服务器不可用"
+            isLoading = false
+            return
+        }
         if (studentIdInput.isBlank()) {
             Toast.makeText(context, "请输入学号", Toast.LENGTH_SHORT).show()
             return
@@ -150,7 +154,7 @@ fun RecordListScreen(
     }
 
     LaunchedEffect(initialStudentId) {
-        if (initialStudentId.isNotEmpty()) {
+        if (initialStudentId.isNotEmpty() && isServerAvailable) {
             studentIdInput = initialStudentId
             loadRecords()
         }
@@ -166,7 +170,7 @@ fun RecordListScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = strings.back)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
             }
             Text(
                 text = "查询记录",
@@ -187,13 +191,13 @@ fun RecordListScreen(
                 onValueChange = { studentIdInput = it },
                 label = { Text("学号") },
                 modifier = Modifier.weight(1f),
-                enabled = !isLoading,
+                enabled = !isLoading && isServerAvailable,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Button(
                 onClick = { loadRecords() },
-                enabled = !isLoading
+                enabled = !isLoading && isServerAvailable
             ) {
                 Text("查询")
             }
@@ -266,7 +270,8 @@ fun RecordListScreen(
                                         onClick = {
                                             recordToDelete = record
                                             showDeleteDialog = true
-                                        }
+                                        },
+                                        enabled = isServerAvailable
                                     ) {
                                         Icon(
                                             Icons.Filled.Delete,

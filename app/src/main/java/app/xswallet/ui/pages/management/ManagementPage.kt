@@ -43,7 +43,8 @@ fun ManagementPage(
     isLoggedIn: Boolean,
     username: String,
     token: String,
-    strings: AppStrings
+    strings: AppStrings,
+    isServerAvailable: Boolean
 ) {
     val isAdmin = username == "admin"
     val navController = rememberNavController()
@@ -101,7 +102,7 @@ fun ManagementPage(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate(ManagementRoute.AddUser.route) },
+                            .clickable(enabled = isServerAvailable) { navController.navigate(ManagementRoute.AddUser.route) },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                     ) {
                         Row(
@@ -118,7 +119,7 @@ fun ManagementPage(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate(ManagementRoute.ManageUser.route) },
+                            .clickable(enabled = isServerAvailable) { navController.navigate(ManagementRoute.ManageUser.route) },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Row(
@@ -149,7 +150,7 @@ fun ManagementPage(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate(ManagementRoute.AddStudent.route) },
+                            .clickable(enabled = isServerAvailable) { navController.navigate(ManagementRoute.AddStudent.route) },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                     ) {
                         Row(
@@ -166,7 +167,7 @@ fun ManagementPage(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate(ManagementRoute.StudentList.route) },
+                            .clickable(enabled = isServerAvailable) { navController.navigate(ManagementRoute.StudentList.route) },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Row(
@@ -183,7 +184,7 @@ fun ManagementPage(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { navController.navigate(ManagementRoute.RecordAdd.route) },
+                            .clickable(enabled = isServerAvailable) { navController.navigate(ManagementRoute.RecordAdd.route) },
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                     ) {
                         Row(
@@ -211,7 +212,8 @@ fun ManagementPage(
             AddUserScreen(
                 onBack = { navController.popBackStack() },
                 token = token,
-                strings = strings
+                strings = strings,
+                isServerAvailable = isServerAvailable
             )
         }
 
@@ -225,7 +227,8 @@ fun ManagementPage(
             ManageUserScreen(
                 onBack = { navController.popBackStack() },
                 token = token,
-                strings = strings
+                strings = strings,
+                isServerAvailable = isServerAvailable
             )
         }
 
@@ -240,7 +243,8 @@ fun ManagementPage(
                 onBack = { navController.popBackStack() },
                 username = username,
                 token = token,
-                strings = strings
+                strings = strings,
+                isServerAvailable = isServerAvailable
             )
         }
 
@@ -258,7 +262,8 @@ fun ManagementPage(
                 strings = strings,
                 onStudentClick = { studentId ->
                     navController.navigate(ManagementRoute.RecordList.withStudentId(studentId))
-                }
+                },
+                isServerAvailable = isServerAvailable
             )
         }
 
@@ -273,7 +278,8 @@ fun ManagementPage(
                 onBack = { navController.popBackStack() },
                 username = username,
                 token = token,
-                strings = strings
+                strings = strings,
+                isServerAvailable = isServerAvailable
             )
         }
 
@@ -291,7 +297,8 @@ fun ManagementPage(
                 username = username,
                 token = token,
                 strings = strings,
-                initialStudentId = studentId
+                initialStudentId = studentId,
+                isServerAvailable = isServerAvailable
             )
         }
     }

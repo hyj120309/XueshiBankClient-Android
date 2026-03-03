@@ -14,16 +14,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -47,7 +43,8 @@ fun QueryPage(
     isLoggedIn: Boolean,
     username: String,
     token: String,
-    strings: AppStrings
+    strings: AppStrings,
+    isServerAvailable: Boolean
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -184,13 +181,14 @@ fun QueryPage(
             trailingIcon = {
                 IconButton(
                     onClick = { scope.launch { searchStudent(searchText) } },
-                    enabled = !isLoading
+                    enabled = isServerAvailable && !isLoading
                 ) {
                     Icon(Icons.Default.Search, contentDescription = "搜索")
                 }
             },
             isError = errorMessage != null,
-            supportingText = errorMessage?.let { { Text(it) } }
+            supportingText = errorMessage?.let { { Text(it) } },
+            enabled = isServerAvailable
         )
 
         Spacer(modifier = Modifier.height(16.dp))

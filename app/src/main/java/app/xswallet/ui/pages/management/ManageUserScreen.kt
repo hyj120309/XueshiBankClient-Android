@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -20,9 +21,6 @@ import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -37,7 +35,8 @@ data class User(
 fun ManageUserScreen(
     onBack: () -> Unit,
     token: String,
-    strings: AppStrings
+    strings: AppStrings,
+    isServerAvailable: Boolean
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -71,7 +70,6 @@ fun ManageUserScreen(
                     }
                     list.add(User(username, alias, permissions))
                 }
-                // 按权限组大小排序（从小到大）
                 list.sortedBy { it.permissions.size }
             } else {
                 val error = connection.errorStream.bufferedReader().use { it.readText() }
@@ -103,6 +101,11 @@ fun ManageUserScreen(
     }
 
     fun loadUsers() {
+        if (!isServerAvailable) {
+            error = "服务器不可用"
+            isLoading = false
+            return
+        }
         isLoading = true
         error = null
         scope.launch {
@@ -146,7 +149,7 @@ fun ManageUserScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = strings.back)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
             }
             Text(
                 text = "管理用户",
@@ -168,6 +171,14 @@ fun ManageUserScreen(
         } else if (error != null) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text("加载失败：$error", color = MaterialTheme.colorScheme.error)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { loadUsers() },
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                enabled = isServerAvailable
+            ) {
+                Text("重试")
             }
         } else {
             LazyColumn(
@@ -204,7 +215,8 @@ fun ManageUserScreen(
                                 onClick = {
                                     userToDelete = user
                                     showDeleteDialog = true
-                                }
+                                },
+                                enabled = isServerAvailable
                             ) {
                                 Icon(
                                     Icons.Filled.Delete,
@@ -235,7 +247,7 @@ fun ManageUserScreen(
                                 val success = deleteUser(userToDelete!!.username)
                                 if (success) {
                                     Toast.makeText(context, "删除成功", Toast.LENGTH_SHORT).show()
-                                    loadUsers() // 刷新列表
+                                    loadUsers()
                                 } else {
                                     Toast.makeText(context, "删除失败", Toast.LENGTH_SHORT).show()
                                 }
