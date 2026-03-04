@@ -98,7 +98,7 @@ fun AboutScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "版本号 ${strings.version}",
+                    text = "版本号 ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -110,7 +110,7 @@ fun AboutScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "构建类型 Beta",
+                    text = "构建类型 Alpha",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
