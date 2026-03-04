@@ -1,3 +1,7 @@
+import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +10,7 @@ plugins {
 
 android {
     namespace = "app.xswallet"
+
     compileSdk {
         version = release(36)
     }
@@ -18,6 +23,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val currentBuildTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+        buildConfigField("String", "BUILD_TIME", "\"$currentBuildTime\"")
     }
 
     buildTypes {
@@ -29,16 +37,21 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11"
     }
@@ -63,11 +76,9 @@ dependencies {
     }
 
     implementation("androidx.navigation:navigation-compose:2.7.7")
-
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-
     implementation("androidx.security:security-crypto:1.0.0")
     implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.27.0")
 

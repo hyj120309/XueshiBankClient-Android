@@ -24,7 +24,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import app.xswallet.R
 import app.xswallet.ui.AppStrings
+import app.xswallet.BuildConfig
 
+val time = BuildConfig.BUILD_TIME
 @Composable
 fun AboutScreen(
     onBack: () -> Unit,
@@ -102,7 +104,7 @@ fun AboutScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "构建日期 2026.3.1",
+                    text = "构建日期(UTC) ${BuildConfig.BUILD_TIME}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
