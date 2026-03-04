@@ -22,6 +22,9 @@ android {
         versionName = "1.1-Alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        //自动注入构建时间
+        val currentBuildTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+        buildConfigField("String", "BUILD_TIME", "\"$currentBuildTime\"")
     }
 
     buildTypes {
