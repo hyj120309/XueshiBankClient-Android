@@ -216,6 +216,11 @@ fun AboutScreen(
             color = MaterialTheme.colorScheme.outline
         )
 
+        Text(
+            text = "我们可能会将其他Q&A放在公告里",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

@@ -72,7 +72,7 @@ fun AppSettingsScreen(
 
     var isDarkMode by remember { mutableStateOf(ThemeManager.isDarkMode) }
     var useDynamicColor by remember { mutableStateOf(ThemeManager.useDynamicColor) }
-    var accentColorHex by remember { mutableStateOf("") }
+    var accentColorHex by remember { mutableStateOf("#66CCFF") }
     var showColorPicker by remember { mutableStateOf(false) }
     var isValidHexColor by remember { mutableStateOf(false) }
 
