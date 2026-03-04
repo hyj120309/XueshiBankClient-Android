@@ -21,6 +21,7 @@ interface AppStrings {
     val confirm: String
     val cancel: String
     val search: String
+    val query: String // 修复点 1：在接口中定义 query
     val settings: String
     val toolbox: String
     val version: String
@@ -73,6 +74,7 @@ object ZhCnStrings : AppStrings {
     override val confirm = "确定"
     override val cancel = "取消"
     override val search = "搜索"
+    override val query = "查询" // 修复点 2：补全简体中文实现
     override val settings = "设置"
     override val toolbox = "工具箱"
     override val version = "XSWallet v1.0.0"
@@ -178,6 +180,7 @@ object EnStrings : AppStrings {
     override val confirm = "Confirm"
     override val cancel = "Cancel"
     override val search = "Search"
+    override val query = "Query" // 修复点 3：补全英文实现
     override val settings = "Settings"
     override val toolbox = "Toolbox"
     override val version = "XSWallet v1.0.0"
