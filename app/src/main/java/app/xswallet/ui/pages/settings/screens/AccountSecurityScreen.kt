@@ -2,17 +2,17 @@ package app.xswallet.ui.pages.settings.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,24 +60,6 @@ fun AccountSecurityScreen(
             viewModel.clear()
         }
     }
-
-    // suspend fun verifyOldPassword(oldPass: String): Boolean = withContext(Dispatchers.IO) {
-    //     val urlString = "$baseUrl/api/login?usrname=${URLEncoder.encode(username, "UTF-8")}&passwd=${URLEncoder.encode(oldPass, "UTF-8")}"
-    //     var connection: HttpURLConnection? = null
-    //     try {
-    //         val url = URL(urlString)
-    //         connection = url.openConnection() as HttpURLConnection
-    //         connection.requestMethod = "GET"
-    //         connection.connectTimeout = 8000
-    //         connection.readTimeout = 8000
-    //         val responseCode = connection.responseCode
-    //         responseCode == 200
-    //     } catch (e: Exception) {
-    //         false
-    //     } finally {
-    //         connection?.disconnect()
-    //     }
-    // }
 
     suspend fun changePassword(newPass: String): Result<Int> = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/user/setpw?usrname=${URLEncoder.encode(username, "UTF-8")}&token=${URLEncoder.encode(token, "UTF-8")}&passwd=${URLEncoder.encode(newPass, "UTF-8")}"
@@ -194,15 +176,18 @@ fun AccountSecurityScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
-                        // OutlinedTextField(
-                        //     value = oldPassword,
-                        //     onValueChange = { oldPassword = it },
-                        //     label = { Text("原密码") },
-                        //     modifier = Modifier.fillMaxWidth(),
-                        //     visualTransformation = PasswordVisualTransformation(),
-                        //     enabled = !isChangingPassword && isServerAvailable
-                        // )
-                        // Spacer(modifier = Modifier.height(8.dp))
+                        val isAdmin = username == "admin"
+                        val inputEnabled = !isChangingPassword && isServerAvailable && !isAdmin
+
+                        OutlinedTextField(
+                            value = oldPassword,
+                            onValueChange = { oldPassword = it },
+                            label = { Text("原密码") },
+                            modifier = Modifier.fillMaxWidth(),
+                            visualTransformation = PasswordVisualTransformation(),
+                            enabled = inputEnabled
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
                             value = newPassword,
@@ -213,10 +198,10 @@ fun AccountSecurityScreen(
                             label = { Text("新密码") },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = PasswordVisualTransformation(),
-                            enabled = !isChangingPassword && isServerAvailable,
+                            enabled = inputEnabled,
                             isError = passwordError != null && newPassword.isNotBlank()
                         )
-                        if (passwordStrength != null && newPassword.isNotBlank()) {
+                        if (passwordStrength != null && newPassword.isNotBlank() && !isAdmin) {
                             Text(
                                 text = "密码强度：$passwordStrength",
                                 style = MaterialTheme.typography.bodySmall,
@@ -237,11 +222,11 @@ fun AccountSecurityScreen(
                             label = { Text("确认新密码") },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = PasswordVisualTransformation(),
-                            enabled = !isChangingPassword && isServerAvailable,
+                            enabled = inputEnabled,
                             isError = passwordError != null
                         )
 
-                        if (passwordError != null) {
+                        if (passwordError != null && !isAdmin) {
                             Text(
                                 text = passwordError!!,
                                 color = MaterialTheme.colorScheme.error,
@@ -262,18 +247,18 @@ fun AccountSecurityScreen(
                                     passwordError = "密码长度至少6位"
                                     return@Button
                                 }
+                                val (storedUsername, storedPassword) = SecurePrefs.getUser(context)
+                                if (storedUsername != username || storedPassword != oldPassword) {
+                                    Toast.makeText(context, "原密码错误", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
                                 passwordError = null
                                 isChangingPassword = true
                                 scope.launch {
                                     try {
-                                        // val oldValid = verifyOldPassword(oldPassword)
-                                        // if (!oldValid) {
-                                        //     Toast.makeText(context, "原密码错误", Toast.LENGTH_SHORT).show()
-                                        //     isChangingPassword = false
-                                        //     return@launch
-                                        // }
                                         val result = changePassword(newPassword)
                                         if (result.isSuccess) {
+                                            SecurePrefs.saveUser(context, username, newPassword)
                                             Toast.makeText(context, "密码修改成功", Toast.LENGTH_SHORT).show()
                                             oldPassword = ""
                                             newPassword = ""
@@ -292,7 +277,7 @@ fun AccountSecurityScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !isChangingPassword && isLoggedIn && username != "admin" && isServerAvailable
+                            enabled = !isChangingPassword && isLoggedIn && !isAdmin && isServerAvailable
                         ) {
                             if (isChangingPassword) {
                                 MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
@@ -300,7 +285,7 @@ fun AccountSecurityScreen(
                                 Text("修改密码")
                             }
                         }
-                        if (username == "admin") {
+                        if (isAdmin) {
                             Text(
                                 text = "超级管理员不能修改密码",
                                 style = MaterialTheme.typography.bodySmall,

@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -33,6 +34,7 @@ data class Student(
     val total: Int
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentListScreen(
     onBack: () -> Unit,
@@ -50,7 +52,10 @@ fun StudentListScreen(
     var students by remember { mutableStateOf<List<Student>>(emptyList()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    suspend fun fetchUserPermissions(): String? = withContext(Dispatchers.IO) {
+    var permissionsList by remember { mutableStateOf<List<String>>(emptyList()) }
+    var selectedPermission by remember { mutableStateOf<String?>(null) }
+
+    suspend fun fetchUserPermissions(): List<String> = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/user/me?usrname=${URLEncoder.encode(username, "UTF-8")}&token=${URLEncoder.encode(token, "UTF-8")}"
         var connection: HttpURLConnection? = null
         try {
@@ -64,27 +69,29 @@ fun StudentListScreen(
             when (responseCode) {
                 200 -> {
                     if (response == "SuperAdmin") {
-                        null
+                        emptyList()
                     } else {
                         val json = JSONObject(response)
                         val permissionsField = json.get("permissions")
                         when (permissionsField) {
                             is JSONArray -> {
-                                if (permissionsField.length() > 0) {
-                                    permissionsField.getString(0)
-                                } else {
-                                    null
-                                }
+                                (0 until permissionsField.length()).map { permissionsField.getString(it) }
                             }
                             is String -> {
-                                val trimmed = permissionsField.trim()
-                                if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                                    trimmed.substring(1, trimmed.length - 1).trim().takeIf { it.isNotEmpty() }
-                                } else {
-                                    trimmed.takeIf { it.isNotEmpty() }
+                                val raw = permissionsField.trim()
+                                when {
+                                    raw.startsWith("[") && raw.endsWith("]") -> {
+                                        val inner = raw.substring(1, raw.length - 1).trim()
+                                        if (inner.isBlank()) emptyList()
+                                        else inner.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                                    }
+                                    raw.contains(',') -> {
+                                        raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                                    }
+                                    else -> listOf(raw)
                                 }
                             }
-                            else -> null
+                            else -> emptyList()
                         }
                     }
                 }
@@ -156,7 +163,7 @@ fun StudentListScreen(
         }
     }
 
-    fun loadData() {
+    fun loadData(classId: String) {
         if (!isServerAvailable) {
             isLoading = false
             errorMessage = "服务器不可用"
@@ -166,13 +173,7 @@ fun StudentListScreen(
         errorMessage = null
         scope.launch {
             try {
-                val classId = fetchUserPermissions()
-                if (classId.isNullOrEmpty()) {
-                    errorMessage = "当前用户没有权限组，无法加载学生"
-                    students = emptyList()
-                } else {
-                    students = fetchStudents(classId)
-                }
+                students = fetchStudents(classId)
             } catch (e: Exception) {
                 errorMessage = e.message
             } finally {
@@ -182,7 +183,22 @@ fun StudentListScreen(
     }
 
     LaunchedEffect(Unit) {
-        loadData()
+        if (!isServerAvailable) return@LaunchedEffect
+        isLoading = true
+        try {
+            val perms = fetchUserPermissions()
+            permissionsList = perms
+            if (perms.isNotEmpty()) {
+                selectedPermission = perms.first()
+                loadData(perms.first())
+            } else {
+                errorMessage = "当前用户没有权限组"
+                isLoading = false
+            }
+        } catch (e: Exception) {
+            errorMessage = e.message
+            isLoading = false
+        }
     }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -223,6 +239,42 @@ fun StudentListScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        if (permissionsList.isNotEmpty() && selectedPermission != null) {
+            var expanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedPermission!!,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("选择班级") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.exposedDropdownSize()
+                ) {
+                    permissionsList.forEach { perm ->
+                        DropdownMenuItem(
+                            text = { Text(perm) },
+                            onClick = {
+                                selectedPermission = perm
+                                expanded = false
+                                loadData(perm)
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -239,7 +291,7 @@ fun StudentListScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { loadData() },
+                onClick = { selectedPermission?.let { loadData(it) } },
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 enabled = isServerAvailable
             ) {
@@ -336,7 +388,7 @@ fun StudentListScreen(
                                 val (success, response) = deleteStudent(studentToDelete!!.studentId)
                                 if (success) {
                                     Toast.makeText(context, "删除成功", Toast.LENGTH_SHORT).show()
-                                    loadData()
+                                    selectedPermission?.let { loadData(it) }
                                 } else {
                                     Toast.makeText(context, "删除失败：$response", Toast.LENGTH_LONG).show()
                                 }
