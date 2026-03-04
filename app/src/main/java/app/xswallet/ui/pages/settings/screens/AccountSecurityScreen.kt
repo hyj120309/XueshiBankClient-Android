@@ -61,7 +61,7 @@ fun AccountSecurityScreen(
         }
     }
 
-    suspend fun changePassword(newPass: String): Boolean = withContext(Dispatchers.IO) {
+    suspend fun changePassword(newPass: String): Result<Int> = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/user/setpw?usrname=${URLEncoder.encode(username, "UTF-8")}&token=${URLEncoder.encode(token, "UTF-8")}&passwd=${URLEncoder.encode(newPass, "UTF-8")}"
         var connection: HttpURLConnection? = null
         try {
@@ -71,9 +71,14 @@ fun AccountSecurityScreen(
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             val responseCode = connection.responseCode
-            responseCode == 200
+            // responseCode == 200
+            if (responseCode == 200) {
+                Result.success(responseCode)
+            } else {
+                Result.failure(Exception("HTTP_$responseCode"))
+            }
         } catch (e: Exception) {
-            false
+            throw e
         } finally {
             connection?.disconnect()
         }
@@ -251,8 +256,8 @@ fun AccountSecurityScreen(
                                 isChangingPassword = true
                                 scope.launch {
                                     try {
-                                        val success = changePassword(newPassword)
-                                        if (success) {
+                                        val result = changePassword(newPassword)
+                                        if (result.isSuccess) {
                                             SecurePrefs.saveUser(context, username, newPassword)
                                             Toast.makeText(context, "密码修改成功", Toast.LENGTH_SHORT).show()
                                             oldPassword = ""
