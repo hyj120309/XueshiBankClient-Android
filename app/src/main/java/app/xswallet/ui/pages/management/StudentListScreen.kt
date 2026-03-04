@@ -78,17 +78,15 @@ fun StudentListScreen(
                                 (0 until permissionsField.length()).map { permissionsField.getString(it) }
                             }
                             is String -> {
-                                val raw = permissionsField.trim()
-                                when {
-                                    raw.startsWith("[") && raw.endsWith("]") -> {
-                                        val inner = raw.substring(1, raw.length - 1).trim()
-                                        if (inner.isBlank()) emptyList()
-                                        else inner.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                                val trimmed = permissionsField.trim()
+                                if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+                                    val inner = trimmed.substring(1, trimmed.length - 1).trim()
+                                    if (inner.isBlank()) emptyList()
+                                    else {
+                                        inner.split(",").map { it.trim() }.filter { it.isNotEmpty() }
                                     }
-                                    raw.contains(',') -> {
-                                        raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }
-                                    }
-                                    else -> listOf(raw)
+                                } else {
+                                    trimmed.split(",").map { it.trim() }.filter { it.isNotEmpty() }
                                 }
                             }
                             else -> emptyList()
@@ -348,7 +346,9 @@ fun StudentListScreen(
                                         text = "查看记录 →",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(end = 8.dp)
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .clickable { onStudentClick(student.studentId) }
                                     )
                                     IconButton(
                                         onClick = {

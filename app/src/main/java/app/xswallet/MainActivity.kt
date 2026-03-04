@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,8 +43,12 @@ import app.xswallet.ui.pages.settings.SettingsPage
 import app.xswallet.ui.pages.settings.navigation.SettingsRoute
 import app.xswallet.ui.theme.ThemeManager
 import app.xswallet.ui.theme.XSWalletTheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -201,6 +204,13 @@ fun SharedTransitionScope.WalletAppContent() {
         }
     }
 
+    val pageTitle = when (selectedPage) {
+        AppPage.OVERVIEW -> "公告"
+        AppPage.QUERY -> "查询"
+        AppPage.MANAGEMENT -> "管理"
+        AppPage.SETTINGS -> "设置"
+    }
+
     if (isAutoLoggingIn || isServerAvailable == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -213,16 +223,11 @@ fun SharedTransitionScope.WalletAppContent() {
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "钱包",
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1
-                            )
-                        }
+                        Text(
+                            text = pageTitle,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,

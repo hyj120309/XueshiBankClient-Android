@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFF5B316),
+    primary = Color(0xFF66CCFF),
     secondary = Color(0xFF03DAC5),
     tertiary = Color(0xFFBB86FC),
     background = Color(0xFF121212),
@@ -28,7 +28,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFFF5B316),
+    primary = Color(0xFF66CCFF),
     secondary = Color(0xFF03DAC5),
     tertiary = Color(0xFFBB86FC),
     background = Color(0xFFFFFFFF),

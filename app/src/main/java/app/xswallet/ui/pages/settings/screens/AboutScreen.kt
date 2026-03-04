@@ -1,49 +1,29 @@
 package app.xswallet.ui.pages.settings.screens
 
-import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import app.xswallet.R
 import app.xswallet.ui.AppStrings
-import app.xswallet.BuildConfig
 
-val time = BuildConfig.BUILD_TIME
 @Composable
 fun AboutScreen(
     onBack: () -> Unit,
     strings: AppStrings
 ) {
-    val context = LocalContext.current
-    var appIconPainter by remember { mutableStateOf<BitmapPainter?>(null) }
-
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            val drawable = context.packageManager.getApplicationIcon(context.packageName)
-            if (drawable is BitmapDrawable) {
-                appIconPainter = BitmapPainter(drawable.bitmap.asImageBitmap())
-            }
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -58,7 +38,7 @@ fun AboutScreen(
                 modifier = Modifier.size(48.dp)
             ) {
                 Icon(
-                    Icons.Filled.ArrowBack,
+                    Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = strings.back
                 )
             }
@@ -79,38 +59,29 @@ fun AboutScreen(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (appIconPainter != null) {
-                    Image(
-                        painter = appIconPainter!!,
-                        contentDescription = "应用图标",
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    )
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_round),
+                    contentDescription = "应用图标",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "版本号 ${BuildConfig.VERSION_NAME}",
+                    text = "版本号 ${strings.version}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "构建日期(UTC) ${BuildConfig.BUILD_TIME}",
+                    text = "构建日期 2026.3.1",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "构建类型 Alpha",
+                    text = "构建类型 Beta",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
@@ -212,6 +183,12 @@ fun AboutScreen(
 
         Text(
             text = "暂时只有这些，如果大家有问题需要这里统一解答的，告诉师太即可（三遍了）",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline
+        )
+
+        Text(
+            text = "太少了？其他Q&A也许都在公告里",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
         )
