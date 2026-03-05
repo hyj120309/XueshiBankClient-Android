@@ -1,5 +1,6 @@
 package app.xswallet.ui.pages
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -166,56 +167,64 @@ fun QueryPage(
         }
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "查询",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        item {
+            Text(
+                text = "查询",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
 
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            label = { Text("输入学号") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            trailingIcon = {
-                IconButton(
-                    onClick = { scope.launch { searchStudent(searchText) } },
-                    enabled = isServerAvailable && !isLoading
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = "搜索")
-                }
-            },
-            isError = errorMessage != null,
-            supportingText = errorMessage?.let { { Text(it) } },
-            enabled = isServerAvailable
-        )
+        item {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                label = { Text("输入学号") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { scope.launch { searchStudent(searchText) } },
+                        enabled = isServerAvailable && !isLoading
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = "搜索")
+                    }
+                },
+                isError = errorMessage != null,
+                supportingText = errorMessage?.let { { Text(it) } },
+                enabled = isServerAvailable
+            )
+        }
 
-        Text(
-            text = "格式：班级+学号\n例子：2401班1号，填写240101",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Text(
+                text = "格式：班级+学号\n例子：2401班1号，填写240101",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 16.dp)
+            )
+        }
 
         if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+                }
             }
-        } else {
-            studentInfo?.let { student ->
+        }
+
+        studentInfo?.let { student ->
+            item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -245,66 +254,86 @@ fun QueryPage(
                         )
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            if (records.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "资金变化趋势",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
 
+                item {
+                    RecordChart(
+                        chartData = ChartData(records, student.studentId),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            item {
                 Text(
-                    text = "记录",
+                    text = "记录明细",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
+            }
 
-                if (records.isEmpty()) {
+            if (records.isEmpty()) {
+                item {
                     Text(
                         text = "无",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.padding(top = 8.dp)
                     )
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                }
+            } else {
+                items(records) { record ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(records) { record ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = if (record.changeAmount > 0) "收入" else "支出",
-                                            fontWeight = FontWeight.Medium,
-                                            color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                                        )
-                                        Text(
-                                            text = String.format(Locale.US, "%+.2f", record.changeAmount),
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                    Text(
-                                        text = "原因：${record.changeReason}",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        text = "操作人：${record.admin}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.outline
-                                    )
-                                }
+                                Text(
+                                    text = if (record.changeAmount > 0) "收入" else "支出",
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = String.format(Locale.US, "%+.2f", record.changeAmount),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                )
                             }
+                            Text(
+                                text = "原因：${record.changeReason}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "操作人：${record.admin}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
                         }
                     }
                 }
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
