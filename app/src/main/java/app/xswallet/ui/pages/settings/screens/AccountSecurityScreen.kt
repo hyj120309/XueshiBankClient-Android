@@ -265,7 +265,9 @@ fun AccountSecurityScreen(
                                             confirmPassword = ""
                                             passwordStrength = null
                                         } else {
-                                            Toast.makeText(context, "密码修改失败", Toast.LENGTH_SHORT).show()
+                                            val code = result.exceptionOrNull()?.message
+                                            Toast.makeText(context, "密码修改失败: $code", Toast.LENGTH_SHORT).show()
+                                            // Toast.makeText(context, "密码修改失败", Toast.LENGTH_SHORT).show()
                                         }
                                     } catch (e: Exception) {
                                         Toast.makeText(context, "错误：${e.message}", Toast.LENGTH_LONG).show()

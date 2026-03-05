@@ -21,6 +21,7 @@ interface AppStrings {
     val confirm: String
     val cancel: String
     val search: String
+    val query: String // 修复点 1：在接口中定义 query
     val settings: String
     val toolbox: String
     val version: String
@@ -73,6 +74,7 @@ object ZhCnStrings : AppStrings {
     override val confirm = "确定"
     override val cancel = "取消"
     override val search = "搜索"
+    override val query = "查询" // 修复点 2：补全简体中文实现
     override val settings = "设置"
     override val toolbox = "工具箱"
     override val version = "XSWallet v1.0.0"
@@ -100,9 +102,9 @@ object ZhCnStrings : AppStrings {
     override val accentColorDesc = "关闭动态取色后，可在此输入HEX颜色值（如#FF5722）"
     override val colorPreview = "颜色预览"
     override val displaySettings = "显示设置"
-    override val dpiScale = "显示密度 (DPI缩放)"
-    override val dpiScaleDesc = "调整应用界面显示密度，范围：0.5 - 2.0 (默认: 1.0)"
-    override val dpiExample = "例如: 1.0"
+    override val dpiScale = "显示密度 (缩放大小)"
+    override val dpiScaleDesc = "调整应用界面缩放大小，如果太大了点击不到按钮可以调小一些，范围：0.5 - 2.0 (默认: 1.0)"
+    override val dpiExample = "默认是1.0，建议一次调整的跨度要小一些，以免太小了啥都点不到"
     override val apply = "应用"
     override val currentDpi = "当前DPI:"
     override val dpiWarning = "请输入有效的DPI缩放值 (0.5 - 2.0)"
@@ -119,6 +121,7 @@ object ZhCnStrings : AppStrings {
 }
 
 object ZhTwStrings : AppStrings by ZhCnStrings {
+    override val query = "查詢"
     override val appName = "XSWallet"
     override val back = "返回"
     override val close = "關閉"
@@ -177,6 +180,7 @@ object EnStrings : AppStrings {
     override val confirm = "Confirm"
     override val cancel = "Cancel"
     override val search = "Search"
+    override val query = "Query" // 修复点 3：补全英文实现
     override val settings = "Settings"
     override val toolbox = "Toolbox"
     override val version = "XSWallet v1.0.0"
@@ -185,7 +189,7 @@ object EnStrings : AppStrings {
     override val loggedIn = "Logged in"
 
     override val settingsTitle = "Settings"
-    override val accountSecurity = "Account Settings"
+    override val accountSecurity = "Account Security"
     override val accountSecurityDesc = "Manage your account and security settings"
     override val appSettings = "App Settings"
     override val appSettingsDesc = "Change the appearance of the app, etc."
@@ -213,8 +217,8 @@ object EnStrings : AppStrings {
     override val seconds = "s"
 
     override val toolboxTitle = "Toolbox"
-    override val toolboxDesc1 = "You might never need these features, but they're useful when you do"
-    override val comingSoon = "Gone"
+    override val toolboxDesc1 = "Features you might never use, but useful when needed"
+    override val comingSoon = "No more"
     override val underDevelopment = "Under Development"
     override val moreToolsSoon = "Yes, it's gone"
     override val languageNote = "For entertainment only, AI translation, may contain errors"
@@ -223,6 +227,7 @@ object EnStrings : AppStrings {
 }
 
 object LzhStrings : AppStrings by ZhCnStrings {
+    override val query = "查詢"
     override val appName = "XSWallet"
     override val back = "返"
     override val close = "閉"
