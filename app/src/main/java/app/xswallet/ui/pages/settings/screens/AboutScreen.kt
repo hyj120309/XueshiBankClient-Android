@@ -119,7 +119,7 @@ fun AboutScreen(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.about_jg),
-                        contentDescription = "杰哥",
+                        contentDescription = "hyj120309",
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape),
@@ -127,7 +127,7 @@ fun AboutScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "杰哥",
+                        text = "hyj120309 ",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }

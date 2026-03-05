@@ -198,6 +198,13 @@ fun QueryPage(
             enabled = isServerAvailable
         )
 
+        Text(
+            text = "格式：班级+学号\n例子：2401班1号，填写240101",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         if (isLoading) {
