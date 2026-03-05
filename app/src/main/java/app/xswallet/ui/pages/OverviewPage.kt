@@ -10,7 +10,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
@@ -117,115 +116,107 @@ fun SharedTransitionScope.OverviewPage(
                 }
             }
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(16.dp)
             ) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "公告",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Row {
-                            IconButton(
-                                onClick = { isFullscreen = true },
-                                enabled = isServerAvailable && htmlContent != null && !isLoading
-                            ) {
-                                Icon(
-                                    Icons.Default.ZoomIn,
-                                    contentDescription = "放大"
-                                )
-                            }
-                            IconButton(
-                                onClick = { refresh() },
-                                enabled = isServerAvailable && !isLoading
-                            ) {
-                                if (isLoading) {
-                                    MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
-                                } else {
-                                    Icon(
-                                        Icons.Default.Refresh,
-                                        contentDescription = "刷新"
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        Text(
-                            text = if (isLoggedIn) "当前用户：$username" else "未登录",
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
-
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(500.dp)
-                            .background(backgroundColor)
-                    ) {
-                        htmlContent?.let { content ->
-                            val webView = remember {
-                                WebView(context).apply {
-                                    setBackgroundColor(AndroidColor.TRANSPARENT)
-                                    settings.javaScriptEnabled = true
-                                    webViewClient = WebViewClient()
-                                }
-                            }
-                            LaunchedEffect(content) {
-                                webView.loadDataWithBaseURL(baseUrl, content, "text/html", "UTF-8", null)
-                            }
-                            AndroidView(
-                                factory = { webView },
-                                modifier = Modifier.fillMaxSize()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "公告",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Row {
+                        IconButton(
+                            onClick = { isFullscreen = true },
+                            enabled = isServerAvailable && htmlContent != null && !isLoading
+                        ) {
+                            Icon(
+                                Icons.Default.ZoomIn,
+                                contentDescription = "放大"
                             )
                         }
-                        if (isLoading) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(backgroundColor.copy(alpha = 0.7f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
-                            }
-                        }
-                        if (errorMessage != null && htmlContent == null) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(backgroundColor),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = errorMessage!!,
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodyMedium
+                        IconButton(
+                            onClick = { refresh() },
+                            enabled = isServerAvailable && !isLoading
+                        ) {
+                            if (isLoading) {
+                                MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
+                            } else {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "刷新"
                                 )
                             }
                         }
                     }
                 }
 
-                item { Spacer(modifier = Modifier.height(32.dp)) }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Text(
+                        text = if (isLoggedIn) "当前用户：$username" else "未登录",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    htmlContent?.let { content ->
+                        val webView = remember {
+                            WebView(context).apply {
+                                setBackgroundColor(AndroidColor.TRANSPARENT)
+                                settings.javaScriptEnabled = true
+                                webViewClient = WebViewClient()
+                            }
+                        }
+                        LaunchedEffect(content) {
+                            webView.loadDataWithBaseURL(baseUrl, content, "text/html", "UTF-8", null)
+                        }
+                        AndroidView(
+                            factory = { webView },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    if (isLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(backgroundColor.copy(alpha = 0.7f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+                        }
+                    }
+                    if (errorMessage != null && htmlContent == null) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = errorMessage!!,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
             }
         }
     }

@@ -127,7 +127,7 @@ fun AboutScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "hyj120309 ",
+                        text = "hyj120309",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
