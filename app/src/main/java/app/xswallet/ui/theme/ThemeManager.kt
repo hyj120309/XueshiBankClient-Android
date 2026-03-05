@@ -34,7 +34,6 @@ object ThemeManager {
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         loadSettings()
-
         if (isDynamicColorAvailable && !prefs.contains(KEY_USE_DYNAMIC_COLOR)) {
             useDynamicColor = true
             saveSettings()
@@ -100,7 +99,7 @@ object ThemeManager {
     }
 
     val currentAccentColor: Color
-        get() = customAccentColor ?: Color(0xFFF5B316) // 默认黄色
+        get() = customAccentColor ?: Color(0xFF66CCFF)
 }
 
 val LocalThemeManager = staticCompositionLocalOf { ThemeManager }

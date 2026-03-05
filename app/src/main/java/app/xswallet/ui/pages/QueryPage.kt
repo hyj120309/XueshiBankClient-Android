@@ -14,15 +14,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.util.Locale
 
 data class StudentInfo(
     val name: String,
@@ -141,6 +146,8 @@ fun QueryPage(
                             ))
                         }
                         list
+                    } else if (responseCode == 404) {
+                        emptyList()
                     } else {
                         val error = connection.errorStream.bufferedReader().use { it.readText() }
                         throw Exception("HTTP $responseCode: $error")
@@ -271,7 +278,7 @@ fun QueryPage(
                                             color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                                         )
                                         Text(
-                                            text = String.format("%+.2f", record.changeAmount),
+                                            text = String.format(Locale.US, "%+.2f", record.changeAmount),
                                             fontWeight = FontWeight.Bold,
                                             color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                                         )

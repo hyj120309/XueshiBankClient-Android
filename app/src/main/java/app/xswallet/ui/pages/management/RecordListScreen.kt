@@ -1,5 +1,6 @@
 package app.xswallet.ui.pages.management
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -99,15 +100,22 @@ fun RecordListScreen(
                 "token=${URLEncoder.encode(token, "UTF-8")}"
         var connection: HttpURLConnection? = null
         try {
+            Log.d("RecordListScreen", "Request URL: $urlString")
             val url = URL(urlString)
             connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 8000
             connection.readTimeout = 8000
             val responseCode = connection.responseCode
-            val response = connection.inputStream.bufferedReader().use { it.readText() }.trim()
+            Log.d("RecordListScreen", "Response code: $responseCode")
+            val response = if (responseCode == 200) {
+                connection.inputStream.bufferedReader().use { it.readText() }.trim()
+            } else {
+                connection.errorStream?.bufferedReader()?.use { it.readText() }?.trim() ?: "HTTP $responseCode"
+            }
             Pair(responseCode == 200, response)
         } catch (e: Exception) {
+            Log.e("RecordListScreen", "Exception in deleteRecord", e)
             throw e
         } finally {
             connection?.disconnect()
@@ -309,6 +317,7 @@ fun RecordListScreen(
                                     Toast.makeText(context, "删除失败：$response", Toast.LENGTH_LONG).show()
                                 }
                             } catch (e: Exception) {
+                                Log.e("RecordListScreen", "异常: ${e.message}")
                                 Toast.makeText(context, "错误：${e.message}", Toast.LENGTH_LONG).show()
                             } finally {
                                 showDeleteDialog = false
