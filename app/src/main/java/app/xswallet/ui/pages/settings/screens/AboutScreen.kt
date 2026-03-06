@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.xswallet.R
 import app.xswallet.ui.AppStrings
+import app.xswallet.BuildConfig
 
 @Composable
 fun AboutScreen(
