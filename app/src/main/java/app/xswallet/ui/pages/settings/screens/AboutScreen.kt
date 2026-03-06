@@ -69,13 +69,13 @@ fun AboutScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "版本号 ${strings.version}",
+                    text = "版本号 ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "构建日期 2026.3.1",
+                    text = "构建日期(UTC) ${BuildConfig.BUILD_TIME}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )
