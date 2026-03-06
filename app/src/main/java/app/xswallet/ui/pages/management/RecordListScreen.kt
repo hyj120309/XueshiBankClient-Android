@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,19 +20,23 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
+import app.xswallet.ui.pages.ChartRecord
+import app.xswallet.ui.pages.RecordChart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.util.*
 
 data class Record(
     val rowid: Int,
     val studentId: Int,
     val changeAmount: Float,
     val changeReason: String,
-    val admin: String
+    val admin: String,
+    val timestamp: String
 )
 
 @Composable
@@ -43,6 +46,7 @@ fun RecordListScreen(
     token: String,
     strings: AppStrings,
     initialStudentId: String = "",
+    currentBalance: Int,
     isServerAvailable: Boolean
 ) {
     val context = LocalContext.current
@@ -76,10 +80,11 @@ fun RecordListScreen(
                         studentId = obj.getInt("student_id"),
                         changeAmount = obj.getDouble("change_amount").toFloat(),
                         changeReason = obj.getString("change_reason"),
-                        admin = obj.getString("admin")
+                        admin = obj.getString("admin"),
+                        timestamp = obj.getString("local_time")
                     ))
                 }
-                list
+                list.sortedBy { it.timestamp }
             } else if (responseCode == 404) {
                 emptyList()
             } else {
@@ -168,129 +173,163 @@ fun RecordListScreen(
         }
     }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
-            }
-            Text(
-                text = "查询记录",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = studentIdInput,
-                onValueChange = { studentIdInput = it },
-                label = { Text("学号") },
-                modifier = Modifier.weight(1f),
-                enabled = !isLoading && isServerAvailable,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(
-                onClick = { loadRecords() },
-                enabled = !isLoading && isServerAvailable
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("查询")
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
+                }
+                Text(
+                    text = "查询记录",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = studentIdInput,
+                    onValueChange = { studentIdInput = it },
+                    label = { Text("学号") },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isLoading && isServerAvailable,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = { loadRecords() },
+                    enabled = !isLoading && isServerAvailable
+                ) {
+                    Text("查询")
+                }
+            }
+        }
 
         if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+                }
             }
-        } else if (errorMessage != null) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("加载失败：$errorMessage", color = MaterialTheme.colorScheme.error)
+        }
+
+        if (errorMessage != null) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("加载失败：$errorMessage", color = MaterialTheme.colorScheme.error)
+                }
             }
-        } else {
-            if (records.isEmpty()) {
+        }
+
+        if (!isLoading && errorMessage == null && records.isNotEmpty()) {
+            item {
+                Text(
+                    text = "资金变化趋势",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            item {
+                RecordChart(
+                    records = records.map { ChartRecord(it.changeAmount, it.timestamp) },
+                    currentBalance = currentBalance,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            item {
+                Text(
+                    text = "记录明细",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            items(records) { record ->
+                Card(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = if (record.changeAmount > 0) "收入" else "支出",
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = String.format(Locale.US, "%+.2f", record.changeAmount),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "原因：${record.changeReason}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Text(
+                                    text = "操作人：${record.admin}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                                Text(
+                                    text = "时间：${record.timestamp}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.outline
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    recordToDelete = record
+                                    showDeleteDialog = true
+                                },
+                                enabled = isServerAvailable
+                            ) {
+                                Icon(
+                                    Icons.Filled.Delete,
+                                    contentDescription = "删除",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (!isLoading && errorMessage == null && records.isEmpty() && studentIdInput.isNotBlank()) {
+            item {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("暂无记录", color = MaterialTheme.colorScheme.outline)
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(records) { record ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "学号：${record.studentId}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        Text(
-                                            text = "金额：${record.changeAmount}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = if (record.changeAmount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                                        )
-                                        Text(
-                                            text = "原因：${record.changeReason}",
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                        Text(
-                                            text = "操作人：${record.admin}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.outline
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            recordToDelete = record
-                                            showDeleteDialog = true
-                                        },
-                                        enabled = isServerAvailable
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Delete,
-                                            contentDescription = "删除",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }

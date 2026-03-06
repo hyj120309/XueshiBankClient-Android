@@ -15,7 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
@@ -23,12 +22,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
-import java.util.Locale
+import java.util.*
 
 data class StudentInfo(
     val name: String,
@@ -41,7 +38,8 @@ data class Record(
     val studentId: Int,
     val changeAmount: Float,
     val changeReason: String,
-    val admin: String
+    val admin: String,
+    val timestamp: String
 )
 
 @Composable
@@ -143,7 +141,8 @@ fun QueryPage(
                                 studentId = obj.getInt("student_id"),
                                 changeAmount = obj.getDouble("change_amount").toFloat(),
                                 changeReason = obj.getString("change_reason"),
-                                admin = obj.getString("admin")
+                                admin = obj.getString("admin"),
+                                timestamp = obj.getString("local_time")
                             ))
                         }
                         list
@@ -159,7 +158,7 @@ fun QueryPage(
                     connection?.disconnect()
                 }
             }
-            records = recordList
+            records = recordList.sortedBy { it.timestamp }
         } catch (e: Exception) {
             errorMessage = "查询失败：${e.message}"
         } finally {
@@ -268,7 +267,8 @@ fun QueryPage(
 
                 item {
                     RecordChart(
-                        chartData = ChartData(records, student.studentId),
+                        records = records.map { ChartRecord(it.changeAmount, it.timestamp) },
+                        currentBalance = student.total,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -323,6 +323,11 @@ fun QueryPage(
                             )
                             Text(
                                 text = "操作人：${record.admin}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                            Text(
+                                text = "时间：${record.timestamp}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.outline
                             )

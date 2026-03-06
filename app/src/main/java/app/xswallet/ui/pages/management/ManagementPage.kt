@@ -29,8 +29,8 @@ sealed class ManagementRoute(val route: String) {
     object AddStudent : ManagementRoute("add_student")
     object StudentList : ManagementRoute("student_list")
     object RecordAdd : ManagementRoute("record_add")
-    object RecordList : ManagementRoute("record_list/{studentId}") {
-        fun withStudentId(studentId: Int) = "record_list/$studentId"
+    object RecordList : ManagementRoute("record_list/{studentId}/{total}") {
+        fun withStudentIdAndTotal(studentId: Int, total: Int) = "record_list/$studentId/$total"
     }
 }
 
@@ -260,8 +260,8 @@ fun ManagementPage(
                 username = username,
                 token = token,
                 strings = strings,
-                onStudentClick = { studentId ->
-                    navController.navigate(ManagementRoute.RecordList.withStudentId(studentId))
+                onStudentClick = { studentId, total ->
+                    navController.navigate(ManagementRoute.RecordList.withStudentIdAndTotal(studentId, total))
                 },
                 isServerAvailable = isServerAvailable
             )
@@ -285,19 +285,21 @@ fun ManagementPage(
 
         composable(
             route = ManagementRoute.RecordList.route,
-            arguments = listOf(navArgument("studentId") { type = NavType.StringType }),
+            arguments = listOf(navArgument("studentId") { type = NavType.StringType }, navArgument("total") { type = NavType.StringType }),
             enterTransition = { slideInHorizontally(initialOffsetX = { fullWidth -> fullWidth }, animationSpec = animationSpec) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { fullWidth -> -fullWidth }, animationSpec = animationSpec) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }, animationSpec = animationSpec) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }, animationSpec = animationSpec) }
         ) { backStackEntry ->
             val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
+            val total = backStackEntry.arguments?.getString("total")?.toIntOrNull() ?: 0
             RecordListScreen(
                 onBack = { navController.popBackStack() },
                 username = username,
                 token = token,
                 strings = strings,
                 initialStudentId = studentId,
+                currentBalance = total,
                 isServerAvailable = isServerAvailable
             )
         }

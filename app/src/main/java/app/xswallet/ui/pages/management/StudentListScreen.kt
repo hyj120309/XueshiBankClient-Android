@@ -22,8 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -41,7 +39,7 @@ fun StudentListScreen(
     username: String,
     token: String,
     strings: AppStrings,
-    onStudentClick: (Int) -> Unit,
+    onStudentClick: (Int, Int) -> Unit,
     isServerAvailable: Boolean
 ) {
     val context = LocalContext.current
@@ -322,7 +320,7 @@ fun StudentListScreen(
                                 Column(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .clickable { onStudentClick(student.studentId) }
+                                        .clickable { onStudentClick(student.studentId, student.total) }
                                 ) {
                                     Text(
                                         text = student.name,
@@ -348,7 +346,7 @@ fun StudentListScreen(
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier
                                             .padding(end = 8.dp)
-                                            .clickable { onStudentClick(student.studentId) }
+                                            .clickable { onStudentClick(student.studentId, student.total) }
                                     )
                                     IconButton(
                                         onClick = {

@@ -222,13 +222,7 @@ fun SharedTransitionScope.WalletAppContent() {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = pageTitle,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
-                    },
+                    title = {},
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
                         titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -482,7 +476,7 @@ fun SharedTransitionScope.WalletAppContent() {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(88.dp)
+                                    .height(80.dp)
                                     .padding(horizontal = 16.dp, vertical = 8.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
