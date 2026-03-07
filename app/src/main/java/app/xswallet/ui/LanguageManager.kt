@@ -99,7 +99,7 @@ object ZhCnStrings : AppStrings {
     override val featureUnavailable = "功能不可用"
     override val customThemeColor = "自定义主题颜色"
     override val accentColorHex = "强调色 (HEX值)"
-    override val accentColorDesc = "关闭动态取色后，可在此输入HEX颜色值（如#FF5722）"
+    override val accentColorDesc = "可以自已网上查找，把想调的颜色转为HEX值"
     override val colorPreview = "颜色预览"
     override val displaySettings = "显示设置"
     override val dpiScale = "显示密度 (缩放大小)"

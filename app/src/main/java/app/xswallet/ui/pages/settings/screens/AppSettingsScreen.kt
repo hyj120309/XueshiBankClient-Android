@@ -72,7 +72,7 @@ fun AppSettingsScreen(
 
     var isDarkMode by remember { mutableStateOf(ThemeManager.isDarkMode) }
     var useDynamicColor by remember { mutableStateOf(ThemeManager.useDynamicColor) }
-    var accentColorHex by remember { mutableStateOf("#66CCFF") }
+    var accentColorHex by remember { mutableStateOf("") }
     var showColorPicker by remember { mutableStateOf(false) }
     var isValidHexColor by remember { mutableStateOf(false) }
 
@@ -296,7 +296,7 @@ fun AppSettingsScreen(
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text(strings.dpiExample) },
+                                placeholder = { Text("推荐颜色:#66CCFF(by hyj120309)") },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant

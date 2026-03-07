@@ -19,7 +19,7 @@ android {
         minSdk = 28
         targetSdk = 34
         versionCode = 1
-        versionName = "1.2-Beta"
+        versionName = "1.3-Beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val currentBuildTime = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())

@@ -1,5 +1,6 @@
 package app.xswallet.ui.pages
 
+import android.annotation.SuppressLint
 import android.graphics.Color as AndroidColor
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -28,6 +29,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import app.xswallet.ui.AppStrings
 import app.xswallet.ui.components.MaterialExpressiveLoading
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +42,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -45,6 +53,7 @@ data class RankItem(
     val total: Int
 )
 
+@SuppressLint("UnusedContentLambdaTargetStateParameter")
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun SharedTransitionScope.OverviewPage(
@@ -53,8 +62,7 @@ fun SharedTransitionScope.OverviewPage(
     token: String,
     strings: AppStrings,
     isServerAvailable: Boolean,
-    viewModel: OverviewViewModel,
-    onRankItemClick: (Int) -> Unit
+    viewModel: OverviewViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val baseUrl = "https://bankapi.bcxs.qzz.io"
@@ -70,6 +78,8 @@ fun SharedTransitionScope.OverviewPage(
     var rankError by remember { mutableStateOf<String?>(null) }
 
     var isFullscreen by remember { mutableStateOf(false) }
+
+    val navController = rememberNavController()
 
     suspend fun fetchRankList(baseUrl: String): List<RankItem> = withContext(Dispatchers.IO) {
         val urlString = "$baseUrl/api/ranklist"
@@ -167,6 +177,10 @@ fun SharedTransitionScope.OverviewPage(
         isFullscreen = false
     }
 
+    BackHandler(enabled = navController.currentBackStackEntry?.destination?.route != "overview_home") {
+        navController.popBackStack()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -208,236 +222,328 @@ fun SharedTransitionScope.OverviewPage(
                 }
             }
         } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+            NavHost(
+                navController = navController,
+                startDestination = "overview_home",
+                modifier = Modifier.fillMaxSize(),
+                enterTransition = {
+                    slideInHorizontally(
+                        initialOffsetX = { fullWidth -> fullWidth },
+                        animationSpec = tween(350, easing = FastOutSlowInEasing)
+                    ) + fadeIn(animationSpec = tween(350))
+                },
+                exitTransition = {
+                    slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> -fullWidth },
+                        animationSpec = tween(350, easing = FastOutSlowInEasing)
+                    )
+                },
+                popEnterTransition = {
+                    slideInHorizontally(
+                        initialOffsetX = { fullWidth -> -fullWidth },
+                        animationSpec = tween(350, easing = FastOutSlowInEasing)
+                    ) + fadeIn(animationSpec = tween(350))
+                },
+                popExitTransition = {
+                    slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> fullWidth },
+                        animationSpec = tween(350, easing = FastOutSlowInEasing)
+                    )
+                }
             ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                composable("overview_home") {
+                    OverviewHomeContent(
+                        htmlContent = htmlContent,
+                        isLoadingAnnouncement = isLoadingAnnouncement,
+                        announcementError = announcementError,
+                        rankList = rankList,
+                        isLoadingRank = isLoadingRank,
+                        rankError = rankError,
+                        isServerAvailable = isServerAvailable,
+                        backgroundColor = backgroundColor,
+                        baseUrl = baseUrl,
+                        context = context,
+                        onFullscreen = { isFullscreen = true },
+                        onRefreshAnnouncement = { refreshAnnouncement() },
+                        onRefreshRank = { refreshRank() },
+                        onStudentClick = { studentId, name, total ->
+                            navController.navigate("overview_records/$studentId/${name}/${total}")
+                        }
+                    )
+                }
+
+                composable(
+                    route = "overview_records/{studentId}/{studentName}/{total}",
+                    arguments = listOf(
+                        navArgument("studentId") { type = NavType.StringType },
+                        navArgument("studentName") { type = NavType.StringType },
+                        navArgument("total") { type = NavType.IntType }
+                    )
+                ) { backStackEntry ->
+                    val studentId = backStackEntry.arguments?.getString("studentId") ?: ""
+                    val studentName = backStackEntry.arguments?.getString("studentName") ?: ""
+                    val total = backStackEntry.arguments?.getInt("total") ?: 0
+                    RankRecordListScreen(
+                        onBack = { navController.popBackStack() },
+                        studentId = studentId,
+                        studentName = studentName,
+                        currentBalance = total,
+                        strings = strings,
+                        isServerAvailable = isServerAvailable
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OverviewHomeContent(
+    htmlContent: String?,
+    isLoadingAnnouncement: Boolean,
+    announcementError: String?,
+    rankList: List<RankItem>,
+    isLoadingRank: Boolean,
+    rankError: String?,
+    isServerAvailable: Boolean,
+    backgroundColor: Color,
+    baseUrl: String,
+    context: android.content.Context,
+    onFullscreen: () -> Unit,
+    onRefreshAnnouncement: () -> Unit,
+    onRefreshRank: () -> Unit,
+    onStudentClick: (Int, String, Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "公告",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Row {
+                    IconButton(
+                        onClick = onFullscreen,
+                        enabled = isServerAvailable && htmlContent != null && !isLoadingAnnouncement
                     ) {
-                        Text(
-                            text = "公告",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                        Icon(
+                            Icons.Default.ZoomIn,
+                            contentDescription = "放大"
                         )
-                        Row {
-                            IconButton(
-                                onClick = { isFullscreen = true },
-                                enabled = isServerAvailable && htmlContent != null && !isLoadingAnnouncement
-                            ) {
-                                Icon(
-                                    Icons.Default.ZoomIn,
-                                    contentDescription = "放大"
-                                )
-                            }
-                            IconButton(
-                                onClick = { refreshAnnouncement() },
-                                enabled = isServerAvailable && !isLoadingAnnouncement
-                            ) {
-                                if (isLoadingAnnouncement) {
-                                    MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
-                                } else {
-                                    Icon(
-                                        Icons.Default.Refresh,
-                                        contentDescription = "刷新"
-                                    )
-                                }
-                            }
-                        }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(end = 16.dp)
+                    IconButton(
+                        onClick = onRefreshAnnouncement,
+                        enabled = isServerAvailable && !isLoadingAnnouncement
                     ) {
-                        htmlContent?.let { content ->
-                            val webView = remember {
-                                WebView(context).apply {
-                                    setBackgroundColor(AndroidColor.TRANSPARENT)
-                                    settings.javaScriptEnabled = true
-                                    webViewClient = WebViewClient()
-                                }
-                            }
-                            LaunchedEffect(content) {
-                                webView.loadDataWithBaseURL(baseUrl, content, "text/html", "UTF-8", null)
-                            }
-                            AndroidView(
-                                factory = { webView },
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
                         if (isLoadingAnnouncement) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(backgroundColor.copy(alpha = 0.7f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
-                            }
-                        }
-                        if (announcementError != null && htmlContent == null) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = announcementError!!,
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
+                            MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
+                        } else {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "刷新"
+                            )
                         }
                     }
                 }
+            }
 
-                VerticalDivider(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
-                        .padding(end = 8.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "排行榜",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .weight(1f)
-                                .wrapContentWidth(Alignment.Start)
-                                .padding(start = 16.dp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        IconButton(
-                            onClick = { refreshRank() },
-                            enabled = isServerAvailable && !isLoadingRank
-                        ) {
-                            if (isLoadingRank) {
-                                MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
-                            } else {
-                                Icon(
-                                    Icons.Default.Refresh,
-                                    contentDescription = "刷新"
-                                )
-                            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(end = 16.dp)
+            ) {
+                htmlContent?.let { content ->
+                    val webView = remember {
+                        WebView(context).apply {
+                            setBackgroundColor(AndroidColor.TRANSPARENT)
+                            settings.javaScriptEnabled = true
+                            webViewClient = WebViewClient()
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
+                    LaunchedEffect(content) {
+                        webView.loadDataWithBaseURL(baseUrl, content, "text/html", "UTF-8", null)
+                    }
+                    AndroidView(
+                        factory = { webView },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                if (isLoadingAnnouncement) {
                     Box(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(start = 16.dp),
+                            .fillMaxSize()
+                            .background(backgroundColor.copy(alpha = 0.7f)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        if (isLoadingRank) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
-                            }
-                        } else if (rankError != null) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "加载失败：$rankError",
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        } else if (rankList.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "暂无排行榜数据",
-                                    color = MaterialTheme.colorScheme.outline,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        } else {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                items(rankList) { item ->
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { onRankItemClick(item.studentId) },
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = when (item.rank) {
-                                                1 -> MaterialTheme.colorScheme.primaryContainer
-                                                2 -> MaterialTheme.colorScheme.secondaryContainer
-                                                3 -> MaterialTheme.colorScheme.tertiaryContainer
-                                                else -> MaterialTheme.colorScheme.surfaceVariant
-                                            }
-                                        )
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(12.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = "${item.rank}",
-                                                style = MaterialTheme.typography.titleLarge,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.width(40.dp)
-                                            )
-                                            Column(
-                                                modifier = Modifier.weight(1f)
-                                            ) {
-                                                Text(
-                                                    text = item.name,
-                                                    style = MaterialTheme.typography.bodyLarge,
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
-                                                Text(
-                                                    text = "学号：${item.studentId}",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.outline
-                                                )
-                                            }
-                                            Text(
-                                                text = "${item.total}",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+                        MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+                    }
+                }
+                if (announcementError != null && htmlContent == null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = announcementError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+
+        VerticalDivider(
+            modifier = Modifier
+                .width(1.dp)
+                .fillMaxHeight()
+                .padding(end = 8.dp),
+            color = MaterialTheme.colorScheme.outlineVariant
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "排行榜",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .wrapContentWidth(Alignment.Start)
+                        .padding(start = 16.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                IconButton(
+                    onClick = onRefreshRank,
+                    enabled = isServerAvailable && !isLoadingRank
+                ) {
+                    if (isLoadingRank) {
+                        MaterialExpressiveLoading(modifier = Modifier.size(24.dp))
+                    } else {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "刷新"
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 16.dp),
+            ) {
+                if (isLoadingRank) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        MaterialExpressiveLoading(modifier = Modifier.size(48.dp))
+                    }
+                } else if (rankError != null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "加载失败：$rankError",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                } else if (rankList.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "暂无排行榜数据",
+                            color = MaterialTheme.colorScheme.outline,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(rankList) { item ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        onStudentClick(item.studentId, item.name, item.total)
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = when (item.rank) {
+                                        1 -> MaterialTheme.colorScheme.primaryContainer
+                                        2 -> MaterialTheme.colorScheme.secondaryContainer
+                                        3 -> MaterialTheme.colorScheme.tertiaryContainer
+                                        else -> MaterialTheme.colorScheme.surfaceVariant
                                     }
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${item.rank}",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.width(40.dp)
+                                    )
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = item.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = "学号：${item.studentId}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.outline
+                                        )
+                                    }
+                                    Text(
+                                        text = "${item.total}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
                                 }
                             }
                         }

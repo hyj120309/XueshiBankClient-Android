@@ -82,7 +82,7 @@ fun AboutScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "构建类型 Alpha",
+                    text = "构建类型 Beta",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.outline
                 )

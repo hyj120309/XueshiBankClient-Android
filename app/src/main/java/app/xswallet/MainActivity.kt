@@ -106,6 +106,8 @@ fun SharedTransitionScope.WalletAppContent() {
 
     var showLoginDialog by remember { mutableStateOf(false) }
 
+    var showServerUnavailableDialog by remember { mutableStateOf(false) }
+
     val topBarHeight = 12.dp
 
     var selectedPage by remember { mutableStateOf(AppPage.OVERVIEW) }
@@ -173,6 +175,9 @@ fun SharedTransitionScope.WalletAppContent() {
     LaunchedEffect(Unit) {
         val serverOk = checkServerStatus()
         isServerAvailable = serverOk
+        if (!serverOk) {
+            showServerUnavailableDialog = true
+        }
         if (serverOk) {
             val (savedUsername, savedPassword) = SecurePrefs.getUser(context)
             if (savedUsername != null && savedPassword != null) {
@@ -186,6 +191,7 @@ fun SharedTransitionScope.WalletAppContent() {
         }
         isAutoLoggingIn = false
     }
+
 
     BackHandler(enabled = true) {
         val currentTime = System.currentTimeMillis()
@@ -304,11 +310,7 @@ fun SharedTransitionScope.WalletAppContent() {
                                 token = currentToken,
                                 strings = strings,
                                 isServerAvailable = isServerAvailable == true,
-                                viewModel = viewModel(),
-                                onRankItemClick = { studentId ->
-                                    queryInitialStudentId = studentId.toString()
-                                    selectedPage = AppPage.QUERY
-                                }
+                                viewModel = viewModel()
                             )
                             AppPage.QUERY -> QueryPage(
                                 isLoggedIn = isLoggedIn,
@@ -549,6 +551,19 @@ fun SharedTransitionScope.WalletAppContent() {
                         .height(topBarHeight)
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 )
+
+                if (showServerUnavailableDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showServerUnavailableDialog = false },
+                        title = { Text("提示") },
+                        text = { Text("服务器不可用，部分功能将受限。") },
+                        confirmButton = {
+                            TextButton(onClick = { showServerUnavailableDialog = false }) {
+                                Text("确定")
+                            }
+                        }
+                    )
+                }
 
                 if (showLoginDialog) {
                     LoginDialog(
