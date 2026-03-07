@@ -116,6 +116,8 @@ fun SharedTransitionScope.WalletAppContent() {
 
     var backPressedTime by remember { mutableStateOf(0L) }
 
+    var queryInitialStudentId by remember { mutableStateOf("") }
+
     val menuWidth by animateDpAsState(
         targetValue = if (isMenuExpanded) 280.dp else 0.dp,
         animationSpec = tween(durationMillis = 300),
@@ -302,14 +304,22 @@ fun SharedTransitionScope.WalletAppContent() {
                                 token = currentToken,
                                 strings = strings,
                                 isServerAvailable = isServerAvailable == true,
-                                viewModel = viewModel()
+                                viewModel = viewModel(),
+                                onRankItemClick = { studentId ->
+                                    queryInitialStudentId = studentId.toString()
+                                    selectedPage = AppPage.QUERY
+                                }
                             )
                             AppPage.QUERY -> QueryPage(
                                 isLoggedIn = isLoggedIn,
                                 username = currentUsername,
                                 token = currentToken,
                                 strings = strings,
-                                isServerAvailable = isServerAvailable == true
+                                isServerAvailable = isServerAvailable == true,
+                                initialStudentId = queryInitialStudentId,
+                                onSearchPerformed = {
+                                    queryInitialStudentId = ""
+                                }
                             )
                             AppPage.MANAGEMENT -> ManagementPage(
                                 isLoggedIn = isLoggedIn,

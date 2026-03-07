@@ -177,7 +177,7 @@ fun RecordListScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         item {
             Row(
@@ -268,7 +268,9 @@ fun RecordListScreen(
 
             items(records) { record ->
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
                 ) {
                     Column(
                         modifier = Modifier

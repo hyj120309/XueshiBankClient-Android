@@ -13,19 +13,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import app.xswallet.ui.AppStrings
-import app.xswallet.ui.pages.settings.screens.AboutScreen
-import app.xswallet.ui.pages.settings.screens.AccountSecurityScreen
-import app.xswallet.ui.pages.settings.screens.AppSettingsScreen
-import app.xswallet.ui.pages.settings.screens.MainSettingsScreen
-import app.xswallet.ui.pages.settings.screens.ToolboxScreen
-
-sealed class SettingsRoute(val route: String) {
-    object Main : SettingsRoute("main")
-    object AccountSecurity : SettingsRoute("account_security")
-    object AppSettings : SettingsRoute("app_settings")
-    object Toolbox : SettingsRoute("toolbox")
-    object About : SettingsRoute("about")
-}
+import app.xswallet.ui.pages.settings.navigation.SettingsRoute
+import app.xswallet.ui.pages.settings.screens.*
 
 val AnimationDuration = 350
 val AnimationEasing = FastOutSlowInEasing
@@ -250,6 +239,42 @@ fun SharedTransitionScope.SettingsPage(
                     }
                 },
                 strings = strings
+            )
+        }
+
+        composable(
+            route = SettingsRoute.PrivacyPolicy.route,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
+                )
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
+                )
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
+                )
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(AnimationDuration, easing = AnimationEasing)
+                )
+            }
+        ) {
+            PrivacyPolicyScreen(
+                onBack = {
+                    if (!navController.popBackStack()) {
+                        onBack()
+                    }
+                }
             )
         }
     }

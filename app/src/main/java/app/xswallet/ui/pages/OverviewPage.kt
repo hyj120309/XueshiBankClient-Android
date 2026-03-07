@@ -9,6 +9,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,7 +35,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -53,7 +53,8 @@ fun SharedTransitionScope.OverviewPage(
     token: String,
     strings: AppStrings,
     isServerAvailable: Boolean,
-    viewModel: OverviewViewModel
+    viewModel: OverviewViewModel,
+    onRankItemClick: (Int) -> Unit
 ) {
     val context = LocalContext.current
     val baseUrl = "https://bankapi.bcxs.qzz.io"
@@ -390,7 +391,9 @@ fun SharedTransitionScope.OverviewPage(
                             ) {
                                 items(rankList) { item ->
                                     Card(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { onRankItemClick(item.studentId) },
                                         colors = CardDefaults.cardColors(
                                             containerColor = when (item.rank) {
                                                 1 -> MaterialTheme.colorScheme.primaryContainer

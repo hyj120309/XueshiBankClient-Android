@@ -48,13 +48,15 @@ fun QueryPage(
     username: String,
     token: String,
     strings: AppStrings,
-    isServerAvailable: Boolean
+    isServerAvailable: Boolean,
+    initialStudentId: String = "",
+    onSearchPerformed: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val baseUrl = "https://bankapi.bcxs.qzz.io"
 
-    var searchText by remember { mutableStateOf("") }
+    var searchText by remember { mutableStateOf(initialStudentId) }
     var isLoading by remember { mutableStateOf(false) }
     var studentInfo by remember { mutableStateOf<StudentInfo?>(null) }
     var records by remember { mutableStateOf<List<Record>>(emptyList()) }
@@ -166,10 +168,19 @@ fun QueryPage(
         }
     }
 
+    LaunchedEffect(initialStudentId) {
+        if (initialStudentId.isNotEmpty() && studentInfo == null && !isLoading && isServerAvailable) {
+            searchText = initialStudentId
+            searchStudent(initialStudentId)
+            onSearchPerformed()
+        }
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         item {
             Text(
@@ -295,7 +306,9 @@ fun QueryPage(
             } else {
                 items(records) { record ->
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
                     ) {
                         Column(
                             modifier = Modifier
